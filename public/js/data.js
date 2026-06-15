@@ -1,7 +1,9 @@
 // data.js — central data refreshers shared by views.
 import { api } from './api.js';
 import { store, toast } from './store.js';
-import { renderDashboard } from './modules/dashboard.js';
+import { renderDashboard, initDashboard } from './modules/dashboard.js';
+
+let dashboardInitialized = false;
 
 export async function reloadStudents() {
   try {
@@ -17,6 +19,7 @@ export async function reloadAnalytics() {
   if (!store.can('analytics:read')) return;
   try {
     renderDashboard(await api.analytics());
+    if (!dashboardInitialized) { initDashboard(); dashboardInitialized = true; }
   } catch (e) {
     toast(e.message, true);
   }

@@ -127,13 +127,35 @@ header { display: flex; justify-content: space-between; align-items: flex-end; m
 .kpi-strip { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 0.75rem;
   margin-bottom: 2.5rem; }
 .kpi { background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 10px;
-  padding: 1.1rem 1.25rem; }
+  padding: 1.1rem 1.25rem; cursor: pointer; transition: all 0.2s ease; }
+.kpi:hover { border-color: var(--accent); box-shadow: 0 2px 8px rgba(0,0,0,0.08); }
 .kpi .v { font-size: 1.5rem; font-weight: 600; letter-spacing: -0.02em; }
 .kpi .l { font-size: 0.7rem; color: var(--text-faint); text-transform: uppercase; letter-spacing: 0.06em;
   margin-top: 0.2rem; }
 .kpi.warn .v { color: var(--warning); }
 .kpi.bad .v { color: var(--danger); }
 .kpi.good .v { color: var(--success); }
+
+/* Modal for KPI details */
+.modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; display: flex;
+  align-items: center; justify-content: center; z-index: 1000; }
+.modal-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+  background: rgba(0,0,0,0.4); }
+.modal-content { position: relative; background: var(--bg-card); border-radius: 12px;
+  max-width: 500px; width: 90%; max-height: 80vh; overflow-y: auto;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.2); }
+.modal-header { display: flex; justify-content: space-between; align-items: center;
+  padding: 1.5rem; border-bottom: 1px solid var(--border-color); }
+.modal-header h3 { font-size: 1.1rem; font-weight: 600; }
+.modal-close { background: none; border: none; font-size: 1.5rem; cursor: pointer;
+  color: var(--text-muted); transition: color 0.2s; }
+.modal-close:hover { color: var(--accent); }
+.modal-body { padding: 1.5rem; }
+.modal-body .calc-item { margin-bottom: 1rem; padding-bottom: 1rem; border-bottom: 1px solid var(--border-color); }
+.modal-body .calc-item:last-child { border-bottom: none; margin-bottom: 0; padding-bottom: 0; }
+.calc-label { font-size: 0.85rem; color: var(--text-muted); margin-bottom: 0.3rem; }
+.calc-value { font-size: 1.2rem; font-weight: 600; color: var(--accent); }
+.calc-detail { font-size: 0.82rem; color: var(--text-faint); margin-top: 0.4rem; line-height: 1.4; }
 
 .toggle-container { display: flex; flex-wrap: wrap; gap: 0.4rem; margin-bottom: 2.5rem; }
 
