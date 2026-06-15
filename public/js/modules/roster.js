@@ -37,8 +37,13 @@ function render() {
     metrics_payload: s.metrics_payload || {}
   }));
 
-  // Build using sportRegistry
-  const html = buildRegistryTable(records, { onEdit: editStudent, showActions: canWrite });
+  // Build using sportRegistry (single-sport academies hide sport column)
+  const isSingleSport = store.tenantSports && store.tenantSports.length === 1;
+  const html = buildRegistryTable(records, {
+    onEdit: editStudent,
+    showActions: canWrite,
+    isSingleSport
+  });
 
   // Extract just the table HTML
   const tempDiv = document.createElement('div');

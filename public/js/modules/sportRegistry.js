@@ -6,7 +6,8 @@ export function buildRegistryTable(records, options = {}) {
   const {
     onEdit = () => {},
     onDelete = () => {},
-    showActions = false
+    showActions = false,
+    isSingleSport = false
   } = options;
 
   if (!records || records.length === 0) {
@@ -25,15 +26,29 @@ export function buildRegistryTable(records, options = {}) {
 
   // Build header row
   let headerHtml = '<thead><tr>' +
-    '<th>Student</th>' +
-    '<th>Sport</th>' +
-    '<th>Tier</th>';
+    '<th>Student</th>';
 
-  // Add metric columns (grouped by sport, shared label if across sports)
-  const metricLabelsSet = new Set();
-  sportIds.forEach(sId => {
-    metricsByPort[sId].forEach(m => metricLabelsSet.add(m.label));
-  });
+  // In single-sport mode: hide sport column, show only that sport's metrics
+  // In multi-sport mode: show sport column + all metrics
+  if (!isSingleSport) {
+    headerHtml += '<th>Sport</th>';
+  }
+
+  headerHtml += '<th>Tier</th>';
+
+  // Add metric columns
+  let metricLabelsSet = new Set();
+
+  if (isSingleSport && sportIds.length === 1) {
+    // Single-sport mode: only show metrics for that one sport
+    metricsByPort[sportIds[0]].forEach(m => metricLabelsSet.add(m.label));
+  } else {
+    // Multi-sport mode: show all metrics from all sports
+    sportIds.forEach(sId => {
+      metricsByPort[sId].forEach(m => metricLabelsSet.add(m.label));
+    });
+  }
+
   metricLabelsSet.forEach(label => {
     headerHtml += `<th><small>${label}</small></th>`;
   });
@@ -48,9 +63,14 @@ export function buildRegistryTable(records, options = {}) {
     const tierName = rec.age_tier_name || rec.age_tier_id;
 
     let row = `<tr>
-      <td style="font-weight:600;">${esc(rec.full_name || rec.name)}</td>
-      <td><span style="font-size:0.8rem; color:var(--muted);">${esc(sportName)}</span></td>
-      <td><span style="font-size:0.8rem; color:var(--muted);">${esc(tierName)}</span></td>`;
+      <td style="font-weight:600;">${esc(rec.full_name || rec.name)}</td>`;
+
+    // Hide sport column in single-sport mode
+    if (!isSingleSport) {
+      row += `<td><span style="font-size:0.8rem; color:var(--muted);">${esc(sportName)}</span></td>`;
+    }
+
+    row += `<td><span style="font-size:0.8rem; color:var(--muted);">${esc(tierName)}</span></td>`;
 
     // Render metrics cells in order of labels
     metricLabelsSet.forEach(label => {
