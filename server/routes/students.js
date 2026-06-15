@@ -6,7 +6,7 @@ import * as Students from '../repos/students.js';
 const router = Router();
 
 router.get('/', (req, res) => {
-  res.json(Students.list(req.tenantId));
+  res.json(Students.list(req.tenantId, req.sportScope));
 });
 
 router.get('/:id', (req, res) => {

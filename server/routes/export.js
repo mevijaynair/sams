@@ -1,30 +1,29 @@
-// routes/export.js — CSV export. Scoped to the current tenant by default.
+// routes/export.js — CSV export, scoped to the active tenant (and coach sport).
 import { Router } from 'express';
 import * as Students from '../repos/students.js';
 
 const router = Router();
 
 const HEADERS = [
-  'TenantID', 'StudentID', 'Name', 'AgeGroup', 'EmiratesID', 'EIDExpiry',
-  'BillingStructure', 'MonthlyFee', 'PaymentStatus', 'LastPayment',
+  'TenantID', 'StudentID', 'Name', 'Sport', 'AgeGroup', 'EmiratesID', 'EIDExpiry',
+  'FeePlan', 'FeeRate', 'PackageRemaining', 'PaymentStatus', 'LastPayment',
   'FreezeRange', 'AccountStatus', 'ExitReason', 'CreatedAt'
 ];
 
 router.get('/students.csv', (req, res) => {
-  const rows = Students.list(req.tenantId);
+  const rows = Students.list(req.tenantId, req.sportScope);
   const lines = [HEADERS.join(',')];
   for (const s of rows) {
     lines.push([
-      s.tenant_id, s.id, s.name, s.age_group, s.eid_number, s.eid_expiry,
-      s.billing_structure, s.monthly_fee, s.payment_status, s.last_payment_date,
+      s.tenant_id, s.id, s.name, s.sport, s.age_group, s.eid_number, s.eid_expiry,
+      s.fee_plan_type, s.fee_rate, s.package_remaining, s.payment_status, s.last_payment_date,
       s.freeze_range, s.account_status, s.exit_reason, s.created_at
     ].map(csvCell).join(','));
   }
-  const csv = lines.join('\r\n');
   res.setHeader('Content-Type', 'text/csv; charset=utf-8');
   res.setHeader('Content-Disposition',
     `attachment; filename="sams_${req.tenantId}_${Date.now()}.csv"`);
-  res.send(csv);
+  res.send(lines.join('\r\n'));
 });
 
 function csvCell(v) {

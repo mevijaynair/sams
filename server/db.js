@@ -2,13 +2,13 @@
 //
 // Uses Node's built-in `node:sqlite` (Node >= 22.5) so there is nothing to
 // install and the DB is a single file under data/. All table access goes
-// through the repos/ layer; this file owns the connection and schema only,
-// which keeps a future swap to Postgres contained to repos/ + this file.
+// through the repos/ layer; this file owns the connection and schema only.
 
 import { DatabaseSync } from 'node:sqlite';
 import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
 import { mkdirSync } from 'node:fs';
+import { hashPassword } from './auth.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const DATA_DIR = join(__dirname, '..', 'data');
@@ -26,16 +26,38 @@ CREATE TABLE IF NOT EXISTS tenants (
   name  TEXT NOT NULL
 );
 
+CREATE TABLE IF NOT EXISTS users (
+  id             TEXT PRIMARY KEY,
+  tenant_id      TEXT REFERENCES tenants(id),      -- NULL for super_admin
+  name           TEXT NOT NULL,
+  email          TEXT NOT NULL UNIQUE,
+  password_hash  TEXT NOT NULL,
+  role           TEXT NOT NULL,                    -- super_admin | admin | coach
+  sport          TEXT,                             -- coaches: their sport
+  active         INTEGER NOT NULL DEFAULT 1,
+  created_at     TEXT NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS auth_sessions (
+  token       TEXT PRIMARY KEY,
+  user_id     TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  created_at  TEXT NOT NULL,
+  expires_at  TEXT NOT NULL
+);
+
 CREATE TABLE IF NOT EXISTS students (
   id                 TEXT PRIMARY KEY,
   tenant_id          TEXT NOT NULL REFERENCES tenants(id),
   name               TEXT NOT NULL,
+  sport              TEXT NOT NULL DEFAULT 'Football',
   age_group          TEXT NOT NULL,
   eid_number         TEXT,
   eid_expiry         TEXT,
-  billing_structure  TEXT NOT NULL DEFAULT 'Standard',
-  monthly_fee        REAL NOT NULL DEFAULT 0,
-  discount_note      TEXT,
+  -- modular fee plan
+  fee_plan_type      TEXT NOT NULL DEFAULT 'monthly', -- monthly | per_session | package
+  fee_rate           REAL NOT NULL DEFAULT 0,         -- monthly amount, OR per-session rate, OR package price
+  package_sessions   INTEGER NOT NULL DEFAULT 0,      -- package: total sessions purchased
+  package_remaining  INTEGER NOT NULL DEFAULT 0,      -- package: sessions left
   freeze_range       TEXT,
   payment_status     TEXT NOT NULL DEFAULT 'Due',
   last_payment_date  TEXT,
@@ -44,6 +66,7 @@ CREATE TABLE IF NOT EXISTS students (
   created_at         TEXT NOT NULL
 );
 CREATE INDEX IF NOT EXISTS idx_students_tenant ON students(tenant_id);
+CREATE INDEX IF NOT EXISTS idx_students_sport ON students(tenant_id, sport);
 
 CREATE TABLE IF NOT EXISTS evaluations (
   id           TEXT PRIMARY KEY,
@@ -74,37 +97,55 @@ export function seed() {
   initSchema();
   const tenantCount = db.prepare('SELECT COUNT(*) AS n FROM tenants').get().n;
   if (tenantCount > 0) {
-    console.log('Seed skipped — tenants already exist.');
+    console.log('Seed skipped — data already exists.');
     return;
   }
+  const now = new Date().toISOString();
 
   const insTenant = db.prepare('INSERT INTO tenants (id, name) VALUES (?, ?)');
-  insTenant.run('ACAD_01', 'Apex Football Academy');
+  insTenant.run('ACAD_01', 'Apex Multi-Sport Academy');
   insTenant.run('ACAD_02', 'Elite Strikers Club');
 
+  // --- users (dev passwords are intentionally simple) ---
+  const insUser = db.prepare(`
+    INSERT INTO users (id, tenant_id, name, email, password_hash, role, sport, active, created_at)
+    VALUES (?,?,?,?,?,?,?,1,?)
+  `);
+  const mk = (id, tenant, name, email, pass, role, sport) =>
+    insUser.run(id, tenant, name, email, hashPassword(pass), role, sport, now);
+
+  mk('u_super', null, 'System Owner', 'super@sams.dev', 'super123', 'super_admin', null);
+  mk('u_admin1', 'ACAD_01', 'Apex Admin', 'admin@apex.dev', 'admin123', 'admin', null);
+  mk('u_coach_fb', 'ACAD_01', 'Coach Diego (Football)', 'football@apex.dev', 'coach123', 'coach', 'Football');
+  mk('u_coach_ck', 'ACAD_01', 'Coach Imran (Cricket)', 'cricket@apex.dev', 'coach123', 'coach', 'Cricket');
+  mk('u_admin2', 'ACAD_02', 'Elite Admin', 'admin@elite.dev', 'admin123', 'admin', null);
+
+  // --- students across sports & fee plans ---
   const insStudent = db.prepare(`
     INSERT INTO students
-      (id, tenant_id, name, age_group, eid_number, eid_expiry, billing_structure,
-       monthly_fee, discount_note, freeze_range, payment_status, last_payment_date,
+      (id, tenant_id, name, sport, age_group, eid_number, eid_expiry, fee_plan_type, fee_rate,
+       package_sessions, package_remaining, freeze_range, payment_status, last_payment_date,
        account_status, exit_reason, created_at)
-    VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
+    VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
   `);
-  const now = new Date().toISOString();
-  insStudent.run('s1', 'ACAD_01', 'Zayd Nair', 'U10-U13', '784-1980-1234567-1',
-    '2027-12-31', 'Standard', 450, '', '', 'Paid', '2026-06-01', 'Active', '', now);
-  insStudent.run('s2', 'ACAD_01', 'Ryan Al-Mansoori', 'U14-U18', '784-2008-7654321-2',
-    '2026-05-15', 'Paused', 500, '', 'July-August', 'Due', '2026-04-01', 'Active', '', now);
-  insStudent.run('s3', 'ACAD_02', 'Omar Haddad', 'U6-U9', '784-2018-1112223-3',
-    '2028-01-20', 'Custom', 300, 'Sibling discount 20%', '', 'Overdue', '2026-03-15', 'Active', '', now);
+  insStudent.run('s1', 'ACAD_01', 'Zayd Nair', 'Football', 'U10-U13', '784-1980-1234567-1',
+    '2027-12-31', 'monthly', 450, 0, 0, '', 'Paid', '2026-06-01', 'Active', '', now);
+  insStudent.run('s2', 'ACAD_01', 'Ryan Al-Mansoori', 'Football', 'U14-U18', '784-2008-7654321-2',
+    '2026-05-15', 'per_session', 60, 0, 0, 'July-August', 'Due', '2026-04-01', 'Active', '', now);
+  insStudent.run('s3', 'ACAD_01', 'Aarav Sharma', 'Cricket', 'U10-U13', '784-2014-2223334-4',
+    '2028-03-10', 'package', 800, 16, 11, '', 'Paid', '2026-05-20', 'Active', '', now);
+  insStudent.run('s4', 'ACAD_01', 'Leah Court', 'Basketball', 'U14-U18', '784-2010-5556667-5',
+    '2026-08-01', 'monthly', 400, 0, 0, '', 'Overdue', '2026-03-15', 'Active', '', now);
+  insStudent.run('s5', 'ACAD_02', 'Omar Haddad', 'Badminton', 'U6-U9', '784-2018-1112223-3',
+    '2028-01-20', 'package', 500, 10, 3, '', 'Due', '2026-04-10', 'Active', '', now);
 
   const insEval = db.prepare(`
-    INSERT INTO evaluations (id, tenant_id, student_id, recorded_at, metrics)
-    VALUES (?,?,?,?,?)
+    INSERT INTO evaluations (id, tenant_id, student_id, recorded_at, metrics) VALUES (?,?,?,?,?)
   `);
   insEval.run('e1', 'ACAD_01', 's1', now,
-    JSON.stringify({ 'Passing Accuracy Metric (%)': '85%', '1v1 Technical Success Rate (%)': '78%' }));
+    JSON.stringify({ passing_accuracy: '85', one_v_one_success: '78', juggling_reps: '40' }));
 
-  console.log('Seeded 2 tenants, 3 students, 1 evaluation.');
+  console.log('Seeded 2 tenants, 5 users, 5 students.');
 }
 
 // Allow `node server/db.js --seed`

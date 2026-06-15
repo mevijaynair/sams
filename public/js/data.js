@@ -1,4 +1,4 @@
-// data.js — central data refreshers shared by all modules.
+// data.js — central data refreshers shared by views.
 import { api } from './api.js';
 import { store, toast } from './store.js';
 import { renderDashboard } from './modules/dashboard.js';
@@ -7,16 +7,16 @@ export async function reloadStudents() {
   try {
     const list = await api.students();
     store.setStudents(list);          // triggers subscribed re-renders
-    await reloadAnalytics();
+    if (store.can('analytics:read')) await reloadAnalytics();
   } catch (e) {
     toast(e.message, true);
   }
 }
 
 export async function reloadAnalytics() {
+  if (!store.can('analytics:read')) return;
   try {
-    const a = await api.analytics();
-    renderDashboard(a);
+    renderDashboard(await api.analytics());
   } catch (e) {
     toast(e.message, true);
   }

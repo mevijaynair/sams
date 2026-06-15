@@ -1,19 +1,34 @@
-// admin.js — enrolment intake form (create + edit) and compliance/billing fields.
+// admin.js — enrolment intake (create + edit): sport, compliance, modular fees.
 import { api } from '../api.js';
 import { store, toast } from '../store.js';
 import { reloadStudents } from '../data.js';
+import { SPORTS, AGE_GROUPS, FEE_PLANS } from '../config.js';
 
 const $ = (id) => document.getElementById(id);
+
+const RATE_LABELS = {
+  monthly: 'Monthly Fee (AED)',
+  per_session: 'Rate per Session (AED)',
+  package: 'Package Price (AED)'
+};
+
+function populateSelects() {
+  $('f_sport').innerHTML = SPORTS.map(s => `<option>${s}</option>`).join('');
+  $('f_ageGroup').innerHTML = AGE_GROUPS.map(a => `<option value="${a.value}">${a.label}</option>`).join('');
+  $('f_feePlan').innerHTML = FEE_PLANS.map(p => `<option value="${p.value}">${p.label}</option>`).join('');
+}
 
 function readForm() {
   return {
     name: $('f_name').value.trim(),
+    sport: $('f_sport').value,
     age_group: $('f_ageGroup').value,
     eid_number: $('f_eidNumber').value.trim(),
     eid_expiry: $('f_eidExpiry').value,
-    billing_structure: $('f_billingStructure').value,
-    monthly_fee: $('f_monthlyFee').value,
-    discount_note: $('f_discountNote').value.trim(),
+    fee_plan_type: $('f_feePlan').value,
+    fee_rate: $('f_feeRate').value,
+    package_sessions: $('f_pkgTotal').value,
+    package_remaining: $('f_pkgRemaining').value,
     freeze_range: $('f_freezeRange').value.trim(),
     payment_status: $('f_paymentStatus').value,
     account_status: $('f_accountStatus').value,
@@ -21,48 +36,58 @@ function readForm() {
   };
 }
 
-function applyConditionalFields() {
-  $('g_freeze').style.display = $('f_billingStructure').value === 'Paused' ? 'flex' : 'none';
-  $('g_discount').style.display = $('f_billingStructure').value === 'Custom' ? 'flex' : 'none';
-  $('g_exit').style.display = $('f_accountStatus').value === 'Exited' ? 'flex' : 'none';
+function applyConditional() {
+  const plan = $('f_feePlan').value;
+  $('f_rateLabel').textContent = RATE_LABELS[plan] || 'Fee (AED)';
+  $('g_package').hidden = plan !== 'package';
+  $('g_exit').hidden = $('f_accountStatus').value !== 'Exited';
 }
+
+function openForm(show = true) { $('studentForm').hidden = !show; }
 
 function resetForm() {
   $('studentForm').reset();
   $('studentId').value = '';
-  $('f_submit').textContent = 'Commit Record to SAMS Core';
-  $('f_dropzone').textContent = 'Drop compliance documents here or click to upload';
+  $('f_submit').textContent = 'Commit Record';
+  $('f_dropzone').textContent = 'Drop compliance documents or click to upload';
   $('f_dropzone').classList.remove('has-file');
-  applyConditionalFields();
+  applyConditional();
 }
 
 export function editStudent(id) {
+  if (!store.can('students:write')) return;
   const s = store.getStudent(id);
   if (!s) return;
+  openForm(true);
   $('studentId').value = s.id;
   $('f_name').value = s.name;
+  $('f_sport').value = s.sport;
   $('f_ageGroup').value = s.age_group;
   $('f_eidNumber').value = s.eid_number || '';
   $('f_eidExpiry').value = s.eid_expiry || '';
-  $('f_billingStructure').value = s.billing_structure;
-  $('f_monthlyFee').value = s.monthly_fee;
-  $('f_discountNote').value = s.discount_note || '';
+  $('f_feePlan').value = s.fee_plan_type;
+  $('f_feeRate').value = s.fee_rate;
+  $('f_pkgTotal').value = s.package_sessions;
+  $('f_pkgRemaining').value = s.package_remaining;
   $('f_freezeRange').value = s.freeze_range || '';
   $('f_paymentStatus').value = s.payment_status;
   $('f_accountStatus').value = s.account_status;
-  applyConditionalFields();
+  applyConditional();
   $('f_exitReason').value = s.exit_reason || '';
   $('f_submit').textContent = 'Update Record';
-  $('adminCard').scrollIntoView({ behavior: 'smooth' });
+  $('studentForm').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
 }
 
 export function initAdmin() {
-  $('f_billingStructure').addEventListener('change', applyConditionalFields);
-  $('f_accountStatus').addEventListener('change', applyConditionalFields);
-  $('f_reset').addEventListener('click', resetForm);
+  populateSelects();
+  applyConditional();
+
+  $('f_feePlan').addEventListener('change', applyConditional);
+  $('f_accountStatus').addEventListener('change', applyConditional);
+  $('toggleForm').addEventListener('click', () => { resetForm(); openForm($('studentForm').hidden); });
+  $('f_cancel').addEventListener('click', () => { resetForm(); openForm(false); });
 
   $('f_dropzone').addEventListener('click', () => {
-    // Mock upload slot — real verification scan storage is a paid-tier feature.
     $('f_dropzone').textContent = '✓ scan_eid_mock.pdf attached (mock)';
     $('f_dropzone').classList.add('has-file');
   });
@@ -73,19 +98,10 @@ export function initAdmin() {
     if (!payload.name) return toast('Student name is required', true);
     try {
       const id = $('studentId').value;
-      if (id) {
-        await api.updateStudent(id, payload);
-        toast('Record updated');
-      } else {
-        await api.createStudent(payload);
-        toast('Student committed to SAMS Core');
-      }
-      resetForm();
+      if (id) { await api.updateStudent(id, payload); toast('Record updated'); }
+      else { await api.createStudent(payload); toast('Student enrolled'); }
+      resetForm(); openForm(false);
       await reloadStudents();
-    } catch (err) {
-      toast(err.message, true);
-    }
+    } catch (err) { toast(err.message, true); }
   });
-
-  applyConditionalFields();
 }

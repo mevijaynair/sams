@@ -5,11 +5,17 @@ import { esc } from '../util.js';
 
 const $ = (id) => document.getElementById(id);
 
+function feeLine(s) {
+  if (s.fee_plan_type === 'package') return `Package: ${s.package_remaining}/${s.package_sessions} sessions left`;
+  if (s.fee_plan_type === 'per_session') return `Per-session plan at AED ${s.fee_rate}/session`;
+  return `Monthly plan at AED ${s.fee_rate}/mo`;
+}
+
 function populateDropdown() {
   const sel = $('commsPlayerSelect');
   const prev = sel.value;
   sel.innerHTML = '<option value="">Select student...</option>' +
-    store.students.map(s => `<option value="${s.id}">${esc(s.name)} (${esc(s.age_group)})</option>`).join('');
+    store.students.map(s => `<option value="${s.id}">${esc(s.name)} · ${esc(s.sport)}</option>`).join('');
   if (store.getStudent(prev)) sel.value = prev;
 }
 
@@ -19,50 +25,44 @@ async function generate() {
   const s = store.getStudent(id);
   const channel = $('commsChannel').value;
 
-  let metricSummary = 'Evaluations pending for current microcycle';
+  let metricSummary = 'Evaluations pending';
   let streakLine = '';
   try {
     const [logs, att] = await Promise.all([api.evaluations(id), api.attendanceSummary(id)]);
-    if (logs.length) {
-      metricSummary = Object.entries(logs[0].metrics).map(([k, v]) => `${k}: ${v}`).join(', ');
-    }
-    if (att.totalSessions) {
-      streakLine = `Attendance: ${att.totalPresent}/${att.totalSessions} sessions · current streak ${att.streak}`;
-    }
+    if (logs.length) metricSummary = Object.entries(logs[0].metrics).map(([k, v]) => `${k}: ${v}`).join(', ');
+    if (att.totalSessions) streakLine = `Attendance ${att.totalPresent}/${att.totalSessions} · streak ${att.streak}`;
   } catch (e) { toast(e.message, true); }
 
   const payDue = s.payment_status !== 'Paid'
-    ? `⚠ Payment ${s.payment_status} — please settle the ${s.billing_structure} plan (AED ${s.monthly_fee}/mo).`
+    ? `Payment ${s.payment_status} — ${feeLine(s)}.`
     : 'Account in good standing. Thank you!';
 
   let text;
   if (channel === 'SMS') {
-    text =
-`SAMS: ${s.name} (${s.age_group}). ${streakLine || 'Attendance pending.'} ${
-        s.payment_status !== 'Paid' ? `Payment ${s.payment_status}.` : 'Paid.'}`;
+    text = `SAMS: ${s.name} (${s.sport}). ${streakLine || 'Attendance pending.'} ${
+      s.payment_status !== 'Paid' ? `Payment ${s.payment_status}.` : 'Paid.'}`;
   } else if (channel === 'Email') {
     text =
 `Subject: ${s.name} — Academy Progress Digest
 
 Dear Parent / Guardian,
 
-Here is the latest progress digest for ${s.name}.
-
-• Division Grouping: ${s.age_group}
+Progress digest for ${s.name}:
+• Sport / Cohort: ${s.sport} · ${s.age_group}
 • Compliance: EID ${s.eid_number || 'not on file'}
-• ${streakLine || 'Attendance: no sessions logged yet'}
-• Performance Matrix: ${metricSummary}
-• Billing: ${s.billing_structure} plan — ${payDue}
+• ${streakLine || 'Attendance: none logged yet'}
+• Performance: ${metricSummary}
+• Billing: ${payDue}
 
 Warm regards,
 Academy Coaching & Admin`;
-  } else { // WhatsApp
+  } else {
     text =
 `*SAMS Progress Brief* — ${s.name}
-• Division: ${s.age_group}
-• ${streakLine || 'Attendance: no sessions logged yet'}
+• ${s.sport} · ${s.age_group}
+• ${streakLine || 'Attendance: none logged yet'}
 • Performance: ${metricSummary}
-• Billing (${s.billing_structure}): ${payDue}`;
+• Billing: ${payDue}`;
   }
   $('commsPayload').value = text;
 }
@@ -70,19 +70,16 @@ Academy Coaching & Admin`;
 export function initComms() {
   $('commsPlayerSelect').addEventListener('change', generate);
   $('commsChannel').addEventListener('change', generate);
-
   $('commsCopy').addEventListener('click', async () => {
     const text = $('commsPayload').value;
     if (!text) return toast('Select a student first', true);
     try { await navigator.clipboard.writeText(text); toast('Payload copied'); }
     catch { $('commsPayload').select(); document.execCommand('copy'); toast('Payload copied'); }
   });
-
   $('commsWhatsApp').addEventListener('click', () => {
     const text = $('commsPayload').value;
     if (!text) return toast('Select a student first', true);
     window.open('https://web.whatsapp.com/send?text=' + encodeURIComponent(text), '_blank');
   });
-
   store.subscribe(populateDropdown);
 }
