@@ -17,6 +17,10 @@ export function renderDashboard(a) {
   $('kpiStrip').innerHTML = kpis.map(k =>
     `<div class="kpi ${k.cls}" data-kpi="${k.key}"><div class="v">${k.v}</div><div class="l">${k.l}</div></div>`).join('');
 
+  // Live count in the sport hero banner.
+  const heroCount = $('heroStudentCount');
+  if (heroCount) heroCount.textContent = a.activeStudents ?? '—';
+
   // Attach click handlers
   document.querySelectorAll('.kpi').forEach(el => {
     el.addEventListener('click', (e) => showKpiDetail(e.target.closest('.kpi').dataset.kpi, a));

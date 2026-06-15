@@ -11,7 +11,13 @@
   <!-- ============ LOGIN ============ -->
   <div id="loginView" class="login-wrap">
     <div class="login-card">
-      <div class="login-mark">S</div>
+      <div class="login-mark">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="9.2"/>
+          <path d="M12 6.6l3.1 2.3-1.2 3.7h-3.8L8.9 8.9 12 6.6z"/>
+          <path d="M12 6.6V3.2M15.1 8.9l3.1-1M13.9 12.6l2 3.1M10.1 12.6l-2 3.1M8.9 8.9l-3.1-1"/>
+        </svg>
+      </div>
       <h1 class="login-title">SAMS</h1>
       <p class="login-sub">Sports Academy Management System</p>
       <form id="loginForm" class="login-form">
@@ -38,7 +44,7 @@
   <div id="appShell" class="shell" hidden>
     <aside class="sidebar">
       <div class="brand">
-        <span class="brand-mark">S</span>
+        <span class="brand-mark" id="brandMark">S</span>
         <span class="brand-text">
           <span class="brand-name">SAMS</span>
           <span class="brand-tag">Academy OS</span>
@@ -53,8 +59,11 @@
     <div class="main">
       <header class="topbar">
         <div class="topbar-lead">
-          <h2 id="pageTitle" class="page-title">Dashboard</h2>
-          <span id="pageContext" class="page-context"></span>
+          <span class="topbar-sport" id="topbarSport" hidden></span>
+          <div class="topbar-titles">
+            <h2 id="pageTitle" class="page-title">Dashboard</h2>
+            <span id="pageContext" class="page-context"></span>
+          </div>
         </div>
         <div class="topbar-right">
           <select id="tenantSelector" class="tenant-select" hidden></select>
@@ -79,6 +88,7 @@
 
         <!-- DASHBOARD -->
         <section class="view" data-view="dashboard">
+          <div class="sport-hero" id="sportHero" hidden></div>
           <div class="kpi-strip" id="kpiStrip"></div>
           <div class="sams-card">
             <div class="card-header"><h3 class="card-title">Billing &amp; Churn Analytics</h3>

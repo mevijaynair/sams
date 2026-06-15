@@ -12,6 +12,7 @@ import { initUsers, loadUsers } from './modules/users.js';
 import { initSettings, loadTenants } from './modules/settings.js';
 import { initParents } from './modules/parents.js';
 import { initAudit } from './modules/audit.js';
+import { sportIcon, sportKey, allSportClasses, fieldPattern } from './graphics.js';
 
 const $ = (id) => document.getElementById(id);
 
@@ -78,8 +79,49 @@ function applyTenant() {
   $('pageContext').textContent = store.isSingleSport()
     ? `${academy} · ${sports[0]}` : academy;
 
+  applySportTheme(academy, sports);
+
   // Let already-initialised modules re-scope their sport selects to this academy.
   window.dispatchEvent(new CustomEvent('sams:tenant'));
+}
+
+// Drives per-sport color identity + graphics (brand mark, topbar icon, hero).
+function applySportTheme(academy, sports) {
+  const single = store.isSingleSport();
+  const sport = single ? sports[0] : null;
+
+  // Body class drives the --sport CSS variables (color identity).
+  document.body.classList.remove(...allSportClasses());
+  if (single) document.body.classList.add(`sport-${sportKey(sport)}`);
+
+  // Brand mark + topbar icon reflect the active sport (multi-sport keeps the "S").
+  const brand = $('brandMark');
+  if (brand) brand.innerHTML = single ? sportIcon(sport, 22) : 'S';
+
+  const topSport = $('topbarSport');
+  if (topSport) {
+    topSport.hidden = !single;
+    if (single) topSport.innerHTML = sportIcon(sport, 20);
+  }
+
+  // Dashboard hero banner.
+  const hero = $('sportHero');
+  if (hero) {
+    hero.hidden = false;
+    const label = single ? sport : `${sports.length} sports`;
+    hero.innerHTML = `
+      ${fieldPattern()}
+      <div class="hero-icon">${sportIcon(sport || 'default', 38)}</div>
+      <div class="hero-text">
+        <div class="hero-eyebrow">${single ? 'Academy Programme' : 'Multi-Sport Club'}</div>
+        <div class="hero-title">${academy || 'Academy'}</div>
+        <div class="hero-sub">${label} · performance, attendance &amp; billing</div>
+      </div>
+      <div class="hero-stat"><div class="hs">
+        <span class="hs-v" id="heroStudentCount">—</span>
+        <span class="hs-l">Active students</span>
+      </div></div>`;
+  }
 }
 
 async function setupTenantSelector() {
