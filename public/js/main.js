@@ -45,12 +45,28 @@ async function enterApp(user) {
   $('appShell').hidden = false;
   $('userName').textContent = user.name;
   $('userRole').textContent = user.roleLabel;
+  $('userRole').className = 'role-pill role-' + (user.role === 'super_admin' ? 'super' : user.role);
+  $('userAvatar').textContent = initials(user.name);
 
   await setupTenantSelector();
+  setContext();
   initModulesOnce();
   buildNav();
   await refreshActiveData();          // initial load
   showView(defaultView());
+}
+
+function initials(name) {
+  return String(name || '').trim().split(/\s+/).slice(0, 2).map(w => w[0] || '').join('').toUpperCase();
+}
+
+// The academy-name breadcrumb under the page title.
+function setContext() {
+  const sel = $('tenantSelector');
+  const academy = store.isSuper()
+    ? (sel.selectedOptions[0]?.textContent || '')
+    : (store.user?.tenantName || '');
+  $('pageContext').textContent = academy;
 }
 
 async function setupTenantSelector() {
@@ -95,6 +111,7 @@ function wireAuth() {
 
   $('tenantSelector').addEventListener('change', async (e) => {
     store.tenantId = e.target.value;
+    setContext();
     await refreshActiveData();
     reloadCurrentView();
   });

@@ -11,6 +11,7 @@
   <!-- ============ LOGIN ============ -->
   <div id="loginView" class="login-wrap">
     <div class="login-card">
+      <div class="login-mark">S</div>
       <h1 class="login-title">SAMS</h1>
       <p class="login-sub">Sports Academy Management System</p>
       <form id="loginForm" class="login-form">
@@ -36,7 +37,13 @@
   <!-- ============ APP SHELL ============ -->
   <div id="appShell" class="shell" hidden>
     <aside class="sidebar">
-      <div class="brand">SAMS</div>
+      <div class="brand">
+        <span class="brand-mark">S</span>
+        <span class="brand-text">
+          <span class="brand-name">SAMS</span>
+          <span class="brand-tag">Academy OS</span>
+        </span>
+      </div>
       <nav class="nav" id="nav"></nav>
       <div class="sidebar-foot">
         <span class="dev-tag">DEV BUILD</span>
@@ -45,14 +52,26 @@
 
     <div class="main">
       <header class="topbar">
-        <h2 id="pageTitle" class="page-title">Dashboard</h2>
+        <div class="topbar-lead">
+          <h2 id="pageTitle" class="page-title">Dashboard</h2>
+          <span id="pageContext" class="page-context"></span>
+        </div>
         <div class="topbar-right">
           <select id="tenantSelector" class="tenant-select" hidden></select>
           <div class="user-chip">
-            <span id="userName" class="user-name"></span>
-            <span id="userRole" class="role-pill"></span>
+            <span class="avatar" id="userAvatar"></span>
+            <span class="user-meta">
+              <span id="userName" class="user-name"></span>
+              <span id="userRole" class="role-pill"></span>
+            </span>
           </div>
-          <button class="btn btn-secondary btn-sm" id="logoutBtn">Sign out</button>
+          <button class="icon-btn" id="logoutBtn" title="Sign out" aria-label="Sign out">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                 stroke-linecap="round" stroke-linejoin="round">
+              <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
+              <polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/>
+            </svg>
+          </button>
         </div>
       </header>
 
