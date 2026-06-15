@@ -20,8 +20,12 @@ function publicUser(u) {
 router.post('/login', (req, res) => {
   const { email, password } = req.body || {};
   const u = Users.findByEmail(email || '');
-  if (!u || !u.active || !verifyPassword(password || '', u.password_hash)) {
-    return res.status(401).json({ error: 'Invalid email or password' });
+
+  // Use constant-time comparison to prevent timing attacks and user enumeration
+  const validUser = u && u.active && verifyPassword(password || '', u.password_hash || '');
+  if (!validUser) {
+    // Return same error regardless of whether user exists or password is wrong
+    return res.status(401).json({ error: 'Invalid credentials' });
   }
 
   const accessToken = createAccessToken(u.id);

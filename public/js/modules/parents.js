@@ -7,6 +7,7 @@ const $ = (id) => document.getElementById(id);
 
 let parentsList = [];
 let currentParent = null;
+let detailModalHandler = null;
 
 export function initParents() {
   $('toggleParentForm').addEventListener('click', () => {
@@ -163,8 +164,13 @@ async function showParentDetail(parentId) {
       $('parentDetailModal').hidden = true;
     });
 
+    // Remove previous handler if it exists
+    if (detailModalHandler) {
+      body.removeEventListener('click', detailModalHandler);
+    }
+
     // Set primary contact, unlink, and link handlers
-    body.addEventListener('click', async (e) => {
+    detailModalHandler = async (e) => {
       const setPrimBtn = e.target.closest('[data-set-primary]');
       const unlinkBtn = e.target.closest('[data-unlink]');
       const linkBtn = e.target.closest('#linkBtn');
@@ -206,7 +212,10 @@ async function showParentDetail(parentId) {
           toast(err.message, true);
         }
       }
-    });
+    };
+
+    // Attach the handler
+    body.addEventListener('click', detailModalHandler);
   } catch (err) {
     toast(err.message, true);
   }

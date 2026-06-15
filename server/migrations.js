@@ -49,20 +49,28 @@ export function runMigrations() {
       const sql = readFileSync(join(MIGRATIONS_DIR, file), 'utf-8');
       console.log(`Applying migration ${version} (${file})...`);
 
-      // Execute the migration file (split by ; to handle multiple statements)
-      const statements = sql.split(';').map(s => s.trim()).filter(s => s);
-      for (const stmt of statements) {
-        db.exec(stmt);
+      // Wrap migration in transaction for atomicity
+      db.exec('BEGIN TRANSACTION');
+      try {
+        // Execute the migration file (split by ; to handle multiple statements)
+        const statements = sql.split(';').map(s => s.trim()).filter(s => s);
+        for (const stmt of statements) {
+          db.exec(stmt);
+        }
+
+        // Record the version
+        db.prepare('INSERT INTO schema_version (version, applied_at) VALUES (?, ?)').run(
+          version,
+          new Date().toISOString()
+        );
+
+        db.exec('COMMIT');
+        appliedCount++;
+        console.log(`✓ Migration ${version} applied successfully`);
+      } catch (txErr) {
+        db.exec('ROLLBACK');
+        throw txErr;
       }
-
-      // Record the version
-      db.prepare('INSERT INTO schema_version (version, applied_at) VALUES (?, ?)').run(
-        version,
-        new Date().toISOString()
-      );
-
-      appliedCount++;
-      console.log(`✓ Migration ${version} applied successfully`);
     } catch (err) {
       console.error(`✗ Migration ${version} failed:`, err.message);
       throw err;

@@ -7,7 +7,11 @@ let refreshPromise = null;
 
 // Refresh the access token using the httpOnly refresh token
 async function refreshAccessToken() {
-  if (isRefreshing) return refreshPromise;
+  // If already refreshing, wait for the existing promise
+  if (isRefreshing && refreshPromise) {
+    return refreshPromise;
+  }
+
   isRefreshing = true;
 
   refreshPromise = (async () => {
@@ -23,6 +27,7 @@ async function refreshAccessToken() {
       }
 
       const { accessToken } = await res.json();
+      // Atomically update token to avoid race condition
       store.setToken(accessToken);
       return accessToken;
     } catch (err) {
@@ -37,7 +42,8 @@ async function refreshAccessToken() {
   return refreshPromise;
 }
 
-async function req(method, path, body) {
+async function req(method, path, body, retryCount = 0) {
+  const MAX_RETRIES = 1; // Only retry once to avoid infinite loops
   const headers = {};
   if (store.token) headers['Authorization'] = `Bearer ${store.token}`;
   if (store.isSuper() && store.tenantId) headers['X-Tenant-Id'] = store.tenantId;
@@ -49,8 +55,8 @@ async function req(method, path, body) {
 
   let res = await fetch(`/api${path}`, opts);
 
-  // If 401, try to refresh the token and retry
-  if (res.status === 401 && store.token) {
+  // If 401, try to refresh the token and retry once
+  if (res.status === 401 && store.token && retryCount < MAX_RETRIES) {
     try {
       await refreshAccessToken();
       // Rebuild the request with the new token
@@ -60,6 +66,7 @@ async function req(method, path, body) {
         retryOpts.body = JSON.stringify(body);
       }
       res = await fetch(`/api${path}`, retryOpts);
+      // If retry also returns 401, let it fall through to error handling
     } catch {
       handleUnauthorized();
       throw new Error('Session expired');
@@ -80,6 +87,12 @@ function handleUnauthorized() {
 }
 
 export const api = {
+  // Generic HTTP methods (used by all modules)
+  get: (path) => req('GET', path),
+  post: (path, body) => req('POST', path, body),
+  put: (path, body) => req('PUT', path, body),
+  delete: (path) => req('DELETE', path),
+
   login: async (email, password) => {
     const { accessToken, user } = await req('POST', '/auth/login', { email, password });
     store.setToken(accessToken);
