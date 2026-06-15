@@ -1,0 +1,342 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SAMS · Branded Dashboard</title>
+<style>
+:root{
+  --bg:#0b0f19; --panel:#111827; --panel-2:#0e1422; --line:rgba(255,255,255,.06);
+  --line-strong:rgba(255,255,255,.12); --txt:#e5e7eb; --muted:#94a3b8; --faint:#64748b;
+  --danger:#f87171; --warn:#fbbf24; --success:#34d399;
+  --tenant-primary:#6366f1; --tenant-glow:rgba(99,102,241,.35);
+  --radius:14px;
+}
+*{box-sizing:border-box;margin:0;padding:0;font-family:"Segoe UI",-apple-system,BlinkMacSystemFont,Roboto,Helvetica,Arial,sans-serif}
+html{-webkit-font-smoothing:antialiased}
+body{background:radial-gradient(1200px 600px at 80% -10%,rgba(99,102,241,.06),transparent),var(--bg);
+  color:var(--txt);min-height:100vh;font-size:14px;line-height:1.5}
+.wrap{max-width:1280px;margin:0 auto;padding:1.75rem 1.5rem 0;display:flex;flex-direction:column;min-height:100vh}
+
+/* header */
+.topbar{display:flex;align-items:center;justify-content:space-between;gap:1rem;
+  padding-bottom:1.25rem;border-bottom:1px solid var(--line);margin-bottom:1.5rem;flex-wrap:wrap}
+.brand{display:flex;align-items:center;gap:.85rem}
+.logo{width:46px;height:46px;border-radius:12px;flex:none;display:grid;place-items:center;
+  font-weight:800;font-size:1.15rem;color:#fff;background-size:cover;background-position:center;
+  background-image:linear-gradient(140deg,var(--tenant-primary),#0b0f19);
+  box-shadow:0 0 0 1px var(--line-strong),0 8px 24px var(--tenant-glow)}
+.brand h1{font-size:1.2rem;font-weight:700;letter-spacing:-.01em}
+.brand .sub{font-size:.74rem;color:var(--faint);text-transform:uppercase;letter-spacing:.16em}
+.controls{display:flex;align-items:center;gap:.6rem}
+select,input[type=text],input[type=date]{background:var(--panel-2);border:1px solid var(--line-strong);
+  color:var(--txt);padding:.55rem .7rem;border-radius:10px;font-size:.85rem;outline:none;transition:.15s}
+select:focus,input:focus{border-color:var(--tenant-primary);box-shadow:0 0 0 3px var(--tenant-glow)}
+
+/* layout */
+.grid{display:grid;grid-template-columns:380px 1fr;gap:1.25rem;align-items:start}
+@media(max-width:920px){.grid{grid-template-columns:1fr}}
+.col{display:flex;flex-direction:column;gap:1.25rem}
+.card{background:linear-gradient(180deg,var(--panel),var(--panel-2));border:1px solid var(--line);
+  border-radius:var(--radius);padding:1.25rem;box-shadow:0 0 0 1px rgba(255,255,255,.02),0 18px 40px rgba(0,0,0,.45)}
+.card:focus-within{border-color:var(--line-strong);box-shadow:0 0 0 1px var(--tenant-glow),0 18px 40px rgba(0,0,0,.5)}
+.card h2{font-size:.78rem;text-transform:uppercase;letter-spacing:.14em;color:var(--muted);
+  margin-bottom:1rem;display:flex;align-items:center;gap:.5rem}
+.card h2::before{content:"";width:7px;height:7px;border-radius:50%;background:var(--tenant-primary);
+  box-shadow:0 0 10px var(--tenant-glow)}
+label{display:block;font-size:.72rem;color:var(--muted);margin:0 0 .35rem;font-weight:500}
+.field{margin-bottom:.9rem}
+.row{display:grid;grid-template-columns:1fr 1fr;gap:.8rem}
+input,select{width:100%}
+
+/* branding simulator */
+.swatch-row{display:flex;align-items:center;gap:.75rem}
+input[type=color]{-webkit-appearance:none;appearance:none;width:46px;height:38px;border:1px solid var(--line-strong);
+  border-radius:10px;background:none;cursor:pointer;padding:3px}
+input[type=color]::-webkit-color-swatch{border:none;border-radius:7px}
+.theme-chip{flex:1;height:38px;border-radius:10px;border:1px solid var(--line-strong);
+  background:linear-gradient(90deg,var(--tenant-primary),transparent);display:flex;align-items:center;
+  padding:0 .75rem;font-size:.78rem;color:#fff;font-weight:600;letter-spacing:.02em}
+.file-btn{display:block;border:1px dashed var(--line-strong);border-radius:10px;padding:.7rem;text-align:center;
+  color:var(--faint);font-size:.78rem;cursor:pointer;transition:.15s}
+.file-btn:hover{border-color:var(--tenant-primary);color:var(--muted)}
+.file-btn.set{border-style:solid;border-color:var(--success);color:var(--success)}
+input[type=file]{display:none}
+
+/* buttons */
+.btn{background:var(--tenant-primary);color:#fff;border:none;border-radius:10px;padding:.6rem 1.1rem;
+  font-weight:600;font-size:.85rem;cursor:pointer;transition:.15s;box-shadow:0 6px 18px var(--tenant-glow)}
+.btn:hover{filter:brightness(1.08)}
+.btn.ghost{background:transparent;border:1px solid var(--line-strong);color:var(--txt);box-shadow:none}
+.btn.ghost:hover{border-color:var(--tenant-primary)}
+.btn:disabled{opacity:.4;cursor:not-allowed;box-shadow:none}
+
+/* wizard */
+.steps{display:flex;gap:.4rem;margin-bottom:1rem}
+.dot{flex:1;height:4px;border-radius:99px;background:var(--line-strong)}
+.dot.on{background:var(--tenant-primary);box-shadow:0 0 8px var(--tenant-glow)}
+.step{display:none}.step.on{display:block}
+.dz{display:flex;gap:.8rem}
+.drop{flex:1;border:1px dashed var(--line-strong);border-radius:10px;padding:.9rem .6rem;text-align:center;
+  font-size:.72rem;color:var(--faint);cursor:pointer;transition:.15s}
+.drop:hover{border-color:var(--tenant-primary);color:var(--muted)}
+.drop.set{border-style:solid;border-color:var(--success);color:var(--success)}
+.nav-row{display:flex;justify-content:space-between;margin-top:1rem;gap:.6rem}
+
+/* matrix */
+table{width:100%;border-collapse:collapse;font-size:.82rem}
+th{text-align:left;color:var(--faint);font-weight:500;font-size:.68rem;text-transform:uppercase;
+  letter-spacing:.08em;padding:.6rem .7rem;border-bottom:1px solid var(--line)}
+td{padding:.7rem;border-bottom:1px solid var(--line);vertical-align:middle}
+tr:last-child td{border-bottom:none}
+tr.alert td{background:linear-gradient(90deg,rgba(248,113,113,.08),transparent)}
+tr.alert{box-shadow:inset 3px 0 0 var(--danger)}
+.pill{display:inline-flex;align-items:center;gap:.35rem;padding:.15rem .55rem;border-radius:99px;
+  font-size:.7rem;font-weight:600;border:1px solid var(--line-strong);color:var(--muted)}
+.pill.tier{color:#fff;border-color:transparent;background:rgba(255,255,255,.06)}
+.pill.ok{color:var(--success);border-color:rgba(52,211,153,.4);background:rgba(52,211,153,.08)}
+.pill.warn{color:var(--warn);border-color:rgba(251,191,36,.4);background:rgba(251,191,36,.08)}
+.pill.bad{color:var(--danger);border-color:rgba(248,113,113,.4);background:rgba(248,113,113,.1)}
+.scan{font-size:.72rem;color:var(--faint)}
+.scan b{color:var(--success)}
+.empty{color:var(--faint);text-align:center;padding:1.5rem;font-size:.82rem}
+
+/* footer guardrail */
+.guardrail{margin-top:auto;border-top:1px solid var(--line);padding:1rem 0 1.4rem;
+  color:var(--faint);font-size:.7rem;line-height:1.6;display:flex;gap:.6rem;align-items:flex-start}
+.guardrail .ico{flex:none;width:16px;height:16px;border-radius:4px;background:rgba(248,113,113,.15);
+  color:var(--danger);display:grid;place-items:center;font-weight:800;font-size:.7rem;margin-top:1px}
+.guardrail strong{color:var(--muted)}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="topbar">
+    <div class="brand">
+      <div class="logo" id="logo">A</div>
+      <div>
+        <h1 id="tenantTitle">Apex Football Academy</h1>
+        <div class="sub">Sports Academy Management System</div>
+      </div>
+    </div>
+    <div class="controls">
+      <label style="margin:0;align-self:center">Active Tenant</label>
+      <select id="tenantSwitch"></select>
+    </div>
+  </header>
+
+  <div class="grid">
+    <div class="col">
+
+      <!-- Tenant Branding Simulator -->
+      <section class="card">
+        <h2>Tenant Branding Simulator</h2>
+        <div class="field">
+          <label>Accent / Theme Colour</label>
+          <div class="swatch-row">
+            <input type="color" id="colorPick" value="#6366f1">
+            <div class="theme-chip" id="themeChip">Live accent</div>
+          </div>
+        </div>
+        <div class="field">
+          <label>Academy Logo (mock upload)</label>
+          <label class="file-btn" id="logoBtn" for="logoFile">Select a logo image…</label>
+          <input type="file" id="logoFile" accept="image/*">
+        </div>
+      </section>
+
+      <!-- Roster Intake Wizard -->
+      <section class="card">
+        <h2>Roster Intake Wizard</h2>
+        <div class="steps"><div class="dot on" data-d="0"></div><div class="dot" data-d="1"></div></div>
+
+        <div class="step on" data-s="0">
+          <div class="field">
+            <label>Player Full Name</label>
+            <input type="text" id="wName" placeholder="e.g. Zayd Nair">
+          </div>
+          <div class="field">
+            <label>Age-Group Tier</label>
+            <select id="wTier">
+              <option value="Grassroots (U6-U9)">Grassroots · U6-U9</option>
+              <option value="Development (U10-U13)">Development · U10-U13</option>
+              <option value="Competitive (U14-U18)">Competitive · U14-U18</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="step" data-s="1">
+          <div class="row">
+            <div class="field">
+              <label>Emirates ID (EID)</label>
+              <input type="text" id="wEid" placeholder="784-YYYY-XXXXXXX-Z">
+            </div>
+            <div class="field">
+              <label>EID Expiry</label>
+              <input type="date" id="wExp">
+            </div>
+          </div>
+          <div class="field">
+            <label>Document Scans</label>
+            <div class="dz">
+              <label class="drop" id="dropFront" for="scanFront">Front scan<br>drop / click</label>
+              <label class="drop" id="dropBack" for="scanBack">Back scan<br>drop / click</label>
+            </div>
+            <input type="file" id="scanFront" accept="image/*,application/pdf">
+            <input type="file" id="scanBack" accept="image/*,application/pdf">
+          </div>
+        </div>
+
+        <div class="nav-row">
+          <button class="btn ghost" id="wPrev" disabled>Back</button>
+          <button class="btn" id="wNext">Next</button>
+        </div>
+      </section>
+    </div>
+
+    <!-- Data Matrix -->
+    <section class="card">
+      <h2>Committed Records · Data Matrix</h2>
+      <div style="overflow-x:auto">
+        <table>
+          <thead><tr>
+            <th>Player</th><th>Tier</th><th>Emirates ID</th><th>Expiry</th><th>Scans</th>
+          </tr></thead>
+          <tbody id="matrix"></tbody>
+        </table>
+      </div>
+    </section>
+  </div>
+
+  <footer class="guardrail">
+    <span class="ico">!</span>
+    <span>Platform infrastructure is provided <strong>“as-is”</strong>. Digital document authenticity (including EID scans)
+    and all regional operational &amp; safety compliance rest <strong>entirely with the local academy tenant</strong>;
+    the platform owner accepts no liability for verification, scheduling, or operational errors.</span>
+  </footer>
+</div>
+
+<script>
+"use strict";
+const EID_THRESHOLD_DAYS = 60, DAY = 86400000;
+
+// ── In-memory tenant DB (drives dynamic branding) ──────────────────────────
+const DB = {
+  active: "t1",
+  tenants: {
+    t1:{ name:"Apex Football Academy",  primary:"#6366f1", logo:null },
+    t2:{ name:"Royal Cricket Academy",  primary:"#10b981", logo:null },
+    t3:{ name:"Skyline Sports Club",    primary:"#f59e0b", logo:null }
+  },
+  records:[
+    { t:"t1", name:"Zayd Nair",        tier:"Development (U10-U13)",  eid:"784-1980-1234567-1", exp:"2027-12-31", front:true,  back:true  },
+    { t:"t1", name:"Ryan Al-Mansoori", tier:"Competitive (U14-U18)", eid:"784-2008-7654321-2", exp:"2026-05-15", front:true,  back:false },
+    { t:"t2", name:"Aarav Sharma",     tier:"Development (U10-U13)",  eid:"784-2014-2223334-4", exp:"2026-08-01", front:true,  back:true  },
+    { t:"t3", name:"Leah Court",       tier:"Competitive (U14-U18)", eid:"784-2010-5556667-5", exp:"2028-02-10", front:false, back:false }
+  ]
+};
+
+const $ = s => document.querySelector(s);
+const tenant = () => DB.tenants[DB.active];
+
+function hexToRgba(hex,a){
+  const n = parseInt(hex.replace("#",""),16);
+  return `rgba(${(n>>16)&255},${(n>>8)&255},${n&255},${a})`;
+}
+function initials(name){ return name.split(/\s+/).slice(0,2).map(w=>w[0]||"").join("").toUpperCase(); }
+
+// ── Branding application ───────────────────────────────────────────────────
+function applyTheme(){
+  const t = tenant();
+  document.documentElement.style.setProperty("--tenant-primary", t.primary);
+  document.documentElement.style.setProperty("--tenant-glow", hexToRgba(t.primary,.35));
+  $("#tenantTitle").textContent = t.name;
+  $("#colorPick").value = t.primary;
+  $("#themeChip").textContent = t.primary.toUpperCase();
+  const logo = $("#logo");
+  if(t.logo){ logo.style.backgroundImage = `url(${t.logo})`; logo.textContent = ""; }
+  else { logo.style.backgroundImage = ""; logo.textContent = initials(t.name); }
+}
+
+// ── EID status ─────────────────────────────────────────────────────────────
+function eidStatus(exp){
+  if(!exp) return { cls:"", label:"—" };
+  const diff = new Date(exp).getTime() - Date.now();
+  if(diff < 0)               return { cls:"bad",  label:"EXPIRED" };
+  if(diff < EID_THRESHOLD_DAYS*DAY) return { cls:"warn", label:"EXPIRING" };
+  return { cls:"ok", label:"VALID" };
+}
+
+// ── Data Matrix render ─────────────────────────────────────────────────────
+function renderMatrix(){
+  const rows = DB.records.filter(r => r.t === DB.active);
+  const tb = $("#matrix");
+  if(!rows.length){ tb.innerHTML = `<tr><td colspan="5" class="empty">No records committed for this academy.</td></tr>`; return; }
+  tb.innerHTML = rows.map(r=>{
+    const s = eidStatus(r.exp), alert = s.cls==="bad"||s.cls==="warn";
+    return `<tr class="${alert?'alert':''}">
+      <td style="font-weight:600">${esc(r.name)}</td>
+      <td><span class="pill tier">${esc(r.tier)}</span></td>
+      <td style="font-family:monospace;color:var(--muted)">${esc(r.eid||"—")}</td>
+      <td><span class="pill ${s.cls}">${r.exp||"—"} · ${s.label}</span></td>
+      <td class="scan">F:${r.front?"<b>✓</b>":"—"} &nbsp; B:${r.back?"<b>✓</b>":"—"}</td>
+    </tr>`;
+  }).join("");
+}
+function esc(s){ return String(s??"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c])); }
+
+// ── Branding controls ──────────────────────────────────────────────────────
+$("#tenantSwitch").innerHTML = Object.entries(DB.tenants).map(([id,t])=>`<option value="${id}">${esc(t.name)}</option>`).join("");
+$("#tenantSwitch").addEventListener("change", e=>{ DB.active = e.target.value; applyTheme(); renderMatrix(); resetWizard(); });
+$("#colorPick").addEventListener("input", e=>{ tenant().primary = e.target.value; applyTheme(); });
+$("#logoFile").addEventListener("change", e=>{
+  const f = e.target.files[0]; if(!f) return;
+  const fr = new FileReader();
+  fr.onload = ev => { tenant().logo = ev.target.result; applyTheme(); $("#logoBtn").textContent = "✓ "+f.name; $("#logoBtn").classList.add("set"); };
+  fr.readAsDataURL(f);
+});
+
+// ── Wizard ─────────────────────────────────────────────────────────────────
+let step = 0;
+const scans = { front:false, back:false };
+function setStep(n){
+  step = n;
+  document.querySelectorAll(".step").forEach(s=>s.classList.toggle("on", +s.dataset.s===n));
+  document.querySelectorAll(".dot").forEach(d=>d.classList.toggle("on", +d.dataset.d<=n));
+  $("#wPrev").disabled = n===0;
+  $("#wNext").textContent = n===1 ? "Commit Record" : "Next";
+}
+function resetWizard(){
+  $("#wName").value=""; $("#wEid").value=""; $("#wExp").value="";
+  scans.front=scans.back=false;
+  $("#dropFront").className="drop"; $("#dropFront").innerHTML="Front scan<br>drop / click";
+  $("#dropBack").className="drop";  $("#dropBack").innerHTML="Back scan<br>drop / click";
+  setStep(0);
+}
+$("#wPrev").addEventListener("click", ()=> setStep(Math.max(0,step-1)));
+$("#wNext").addEventListener("click", ()=>{
+  if(step===0){
+    if(!$("#wName").value.trim()){ $("#wName").focus(); return; }
+    setStep(1); return;
+  }
+  DB.records.unshift({
+    t:DB.active, name:$("#wName").value.trim(), tier:$("#wTier").value,
+    eid:$("#wEid").value.trim(), exp:$("#wExp").value, front:scans.front, back:scans.back
+  });
+  renderMatrix(); resetWizard();
+});
+function bindDrop(inputId, dropId, key){
+  $("#"+inputId).addEventListener("change", e=>{
+    const f = e.target.files[0]; if(!f) return;
+    scans[key]=true; const d=$("#"+dropId); d.classList.add("set"); d.innerHTML = "✓ "+key+"<br>"+esc(f.name.slice(0,14));
+  });
+}
+bindDrop("scanFront","dropFront","front");
+bindDrop("scanBack","dropBack","back");
+
+// ── Boot ───────────────────────────────────────────────────────────────────
+applyTheme(); renderMatrix(); setStep(0);
+</script>
+</body>
+</html>

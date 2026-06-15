@@ -1,9 +1,10 @@
-// roster.js — central registry table with edit/delete (gated) + CSV export.
+// roster.js — central multi-sport registry table with edit/delete (gated) + CSV export.
 import { api } from '../api.js';
 import { store, toast } from '../store.js';
 import { esc, isEidExpired } from '../util.js';
 import { reloadStudents } from '../data.js';
 import { editStudent } from './admin.js';
+import { buildRegistryTable } from './sportRegistry.js';
 
 const $ = (id) => document.getElementById(id);
 const PLAN_LABELS = { monthly: 'Monthly', per_session: 'Per session', package: 'Package' };
@@ -17,34 +18,34 @@ function planCell(s) {
 function render() {
   const tbody = $('rosterTable').querySelector('tbody');
   const canWrite = store.can('students:write');
+
   if (!store.students.length) {
-    tbody.innerHTML = '<tr><td colspan="8" class="hint">No students for this view.</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="12" class="hint">No students for this view.</td></tr>';
     return;
   }
-  tbody.innerHTML = store.students.map(s => {
-    const expired = isEidExpired(s.eid_expiry);
-    const eidLine = s.eid_number
-      ? `<div style="font-size:0.82rem;">${esc(s.eid_number)}</div>
-         <div style="font-size:0.72rem; ${expired ? 'color:var(--danger);font-weight:600;' : 'color:var(--text-faint);'}">
-           ${esc(s.eid_expiry) || '—'} ${expired ? '(EXPIRED)' : ''}</div>`
-      : '<span class="hint">No EID</span>';
-    const actions = canWrite
-      ? `<button class="btn btn-secondary btn-sm" data-edit="${s.id}">Edit</button>
-         <button class="btn btn-danger btn-sm" data-del="${s.id}">✕</button>`
-      : '<span class="hint">read-only</span>';
-    return `<tr>
-      <td><div style="font-weight:500;">${esc(s.name)}</div>
-          <div style="font-size:0.72rem;color:var(--text-faint);">${esc(s.id).slice(0, 8)}</div></td>
-      <td class="sport-scoped"><span class="tag">${esc(s.sport)}</span></td>
-      <td>${esc(s.age_group)}</td>
-      <td>${eidLine}</td>
-      <td>${esc(planCell(s))}</td>
-      <td><span class="tag tag-${esc(s.payment_status.toLowerCase())}">${esc(s.payment_status)}</span></td>
-      <td><span class="tag tag-${esc(s.account_status.toLowerCase())}">${esc(s.account_status)}${
-            s.exit_reason ? ` (${esc(s.exit_reason)})` : ''}</span></td>
-      <td style="white-space:nowrap;">${actions}</td>
-    </tr>`;
-  }).join('');
+
+  // Enrich records with sport_id and age_tier_id from names (mapping layer)
+  const records = store.students.map(s => ({
+    ...s,
+    sport_id: s.sport?.toLowerCase().replace(/\s+/g, '_'),
+    age_tier_id: s.age_group,
+    age_tier_name: s.age_group,
+    metrics_payload: s.metrics_payload || {}
+  }));
+
+  // Use sportRegistry to build multi-sport table
+  const html = buildRegistryTable(records, { onEdit: editStudent, showActions: canWrite });
+
+  // Replace entire table (since we're using sportRegistry format)
+  const table = document.createElement('div');
+  table.innerHTML = html;
+  $('rosterTable').parentElement.replaceChild(table.querySelector('table'), $('rosterTable'));
+  $('rosterTable').id = 'rosterTable';  // Restore ID
+
+  // Re-attach event listeners after table replacement
+  document.querySelectorAll('[data-edit]').forEach(btn => {
+    btn.addEventListener('click', (e) => editStudent(e.target.dataset.edit));
+  });
 }
 
 export function initRoster() {

@@ -1,8 +1,10 @@
-// admin.js — enrolment intake (create + edit): sport, compliance, modular fees.
+// admin.js — enrolment intake (create + edit): sport, compliance, modular fees, multi-sport dynamics.
 import { api } from '../api.js';
 import { store, toast } from '../store.js';
 import { reloadStudents } from '../data.js';
 import { AGE_GROUPS, FEE_PLANS } from '../config.js';
+import { SPORT_CONFIG, getSportIdByName } from '../config/sportConfig.js';
+import { injectTierOptions, injectMetricFields, collectMetricsFromForm } from './sportDynamics.js';
 
 const $ = (id) => document.getElementById(id);
 
@@ -14,16 +16,24 @@ const RATE_LABELS = {
 
 function populateSelects() {
   // Only the sports this academy actually runs (one option for single-sport).
-  $('f_sport').innerHTML = store.tenantSports.map(s => `<option>${s}</option>`).join('');
-  $('f_ageGroup').innerHTML = AGE_GROUPS.map(a => `<option value="${a.value}">${a.label}</option>`).join('');
+  $('f_sport').innerHTML = store.tenantSports.map(s => `<option value="${s}">${s}</option>`).join('');
   $('f_feePlan').innerHTML = FEE_PLANS.map(p => `<option value="${p.value}">${p.label}</option>`).join('');
 }
 
 function readForm() {
+  const sport = $('f_sport').value;
+  const sportId = getSportIdByName(sport);
+  const tierId = $('f_ageGroup').value;
+  const metricsPayload = sportId && tierId ? collectMetricsFromForm(sportId, tierId) : {};
+
   return {
     name: $('f_name').value.trim(),
-    sport: $('f_sport').value,
-    age_group: $('f_ageGroup').value,
+    sport: sport,
+    sport_id: sportId,
+    age_group: tierId,
+    age_tier_id: tierId,
+    age_tier_name: $('f_ageGroup').options[$('f_ageGroup').selectedIndex]?.text || '',
+    metrics_payload: metricsPayload,
     eid_number: $('f_eidNumber').value.trim(),
     eid_expiry: $('f_eidExpiry').value,
     fee_plan_type: $('f_feePlan').value,
@@ -63,7 +73,18 @@ export function editStudent(id) {
   $('studentId').value = s.id;
   $('f_name').value = s.name;
   $('f_sport').value = s.sport;
-  $('f_ageGroup').value = s.age_group;
+
+  // Populate tiers for this sport
+  const sportId = getSportIdByName(s.sport);
+  if (sportId) injectTierOptions(sportId, $('f_ageGroup'));
+  $('f_ageGroup').value = s.age_group || s.age_tier_id || '';
+
+  // Populate metrics if available
+  if (sportId && s.age_group) {
+    injectMetricFields(sportId, s.age_group, $('dynamicMetricsSection'));
+    $('dynamicMetricsSection').style.display = 'block';
+  }
+
   $('f_eidNumber').value = s.eid_number || '';
   $('f_eidExpiry').value = s.eid_expiry || '';
   $('f_feePlan').value = s.fee_plan_type;
@@ -79,11 +100,35 @@ export function editStudent(id) {
   $('studentForm').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
 }
 
+function onSportChange() {
+  const sport = $('f_sport').value;
+  const sportId = getSportIdByName(sport);
+  if (sportId) injectTierOptions(sportId, $('f_ageGroup'));
+  $('f_ageGroup').value = '';
+  $('dynamicMetricsSection').innerHTML = '';
+  $('dynamicMetricsSection').style.display = 'none';
+}
+
+function onTierChange() {
+  const sport = $('f_sport').value;
+  const sportId = getSportIdByName(sport);
+  const tierId = $('f_ageGroup').value;
+  if (sportId && tierId) {
+    injectMetricFields(sportId, tierId, $('dynamicMetricsSection'));
+    $('dynamicMetricsSection').style.display = 'block';
+  } else {
+    $('dynamicMetricsSection').innerHTML = '';
+    $('dynamicMetricsSection').style.display = 'none';
+  }
+}
+
 export function initAdmin() {
   populateSelects();
   applyConditional();
   window.addEventListener('sams:tenant', populateSelects);   // re-scope sports on tenant switch
 
+  $('f_sport').addEventListener('change', onSportChange);
+  $('f_ageGroup').addEventListener('change', onTierChange);
   $('f_feePlan').addEventListener('change', applyConditional);
   $('f_accountStatus').addEventListener('change', applyConditional);
   $('toggleForm').addEventListener('click', () => { resetForm(); openForm($('studentForm').hidden); });
