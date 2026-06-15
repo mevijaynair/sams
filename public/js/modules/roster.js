@@ -16,15 +16,19 @@ function planCell(s) {
 }
 
 function render() {
-  const tbody = $('rosterTable').querySelector('tbody');
+  const table = $('rosterTable');
+  const thead = table?.querySelector('thead');
+  const tbody = table?.querySelector('tbody');
   const canWrite = store.can('students:write');
 
+  if (!tbody) return;
+
   if (!store.students.length) {
-    tbody.innerHTML = '<tr><td colspan="12" class="hint">No students for this view.</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="8" class="hint">No students for this view.</td></tr>';
     return;
   }
 
-  // Enrich records with sport_id and age_tier_id from names (mapping layer)
+  // For multi-sport: enrich with sport_id and metrics_payload
   const records = store.students.map(s => ({
     ...s,
     sport_id: s.sport?.toLowerCase().replace(/\s+/g, '_'),
@@ -33,16 +37,21 @@ function render() {
     metrics_payload: s.metrics_payload || {}
   }));
 
-  // Use sportRegistry to build multi-sport table
+  // Build using sportRegistry
   const html = buildRegistryTable(records, { onEdit: editStudent, showActions: canWrite });
 
-  // Replace entire table (since we're using sportRegistry format)
-  const table = document.createElement('div');
-  table.innerHTML = html;
-  $('rosterTable').parentElement.replaceChild(table.querySelector('table'), $('rosterTable'));
-  $('rosterTable').id = 'rosterTable';  // Restore ID
+  // Extract just the table HTML
+  const tempDiv = document.createElement('div');
+  tempDiv.innerHTML = html;
+  const newTable = tempDiv.querySelector('table');
+  const newTheadHtml = newTable.querySelector('thead').innerHTML;
+  const newTbodyHtml = newTable.querySelector('tbody').innerHTML;
 
-  // Re-attach event listeners after table replacement
+  // Update headers if sport mix changed (dynamic columns)
+  if(thead) thead.innerHTML = newTheadHtml;
+  if(tbody) tbody.innerHTML = newTbodyHtml;
+
+  // Re-attach event listeners
   document.querySelectorAll('[data-edit]').forEach(btn => {
     btn.addEventListener('click', (e) => editStudent(e.target.dataset.edit));
   });
