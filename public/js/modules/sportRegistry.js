@@ -48,7 +48,7 @@ export function buildRegistryTable(records, options = {}) {
     const tierName = rec.age_tier_name || rec.age_tier_id;
 
     let row = `<tr>
-      <td style="font-weight:600;">${esc(rec.full_name)}</td>
+      <td style="font-weight:600;">${esc(rec.full_name || rec.name)}</td>
       <td><span style="font-size:0.8rem; color:var(--muted);">${esc(sportName)}</span></td>
       <td><span style="font-size:0.8rem; color:var(--muted);">${esc(tierName)}</span></td>`;
 
