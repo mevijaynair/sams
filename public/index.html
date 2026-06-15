@@ -85,7 +85,9 @@
               <span class="card-sub">Active cohort</span></div>
             <div class="grid-2">
               <div>
-                <h4 class="mini-h">Sport Mix</h4><div class="bars" id="sportBars"></div>
+                <div class="sport-scoped">
+                  <h4 class="mini-h">Sport Mix</h4><div class="bars" id="sportBars"></div>
+                </div>
                 <h4 class="mini-h mt">Fee Plan Mix</h4><div class="bars" id="planBars"></div>
               </div>
               <div>
@@ -109,7 +111,7 @@
               <div class="form-row">
                 <div class="form-group"><label>Student Full Name *</label>
                   <input type="text" id="f_name" required placeholder="John Doe"></div>
-                <div class="form-group"><label>Sport *</label><select id="f_sport"></select></div>
+                <div class="form-group sport-scoped" id="g_sport"><label>Sport *</label><select id="f_sport"></select></div>
               </div>
               <div class="form-row mt">
                 <div class="form-group"><label>Age Bracket *</label><select id="f_ageGroup"></select></div>
@@ -175,7 +177,7 @@
             <div style="overflow-x:auto;">
               <table class="sams-table" id="rosterTable">
                 <thead><tr>
-                  <th>Student</th><th>Sport</th><th>Cohort</th><th>EID</th>
+                  <th>Student</th><th class="sport-scoped">Sport</th><th>Cohort</th><th>EID</th>
                   <th>Fee Plan</th><th>Payment</th><th>Status</th><th></th>
                 </tr></thead>
                 <tbody></tbody>
@@ -293,15 +295,16 @@
           <div class="sams-card">
             <div class="card-header"><h3 class="card-title">Academies (Tenants)</h3>
               <span class="card-sub">Super admin</span></div>
-            <form id="tenantForm" class="form-row">
-              <div class="form-group"><label>New Academy Name</label>
-                <input type="text" id="t_name" placeholder="e.g. Coastal Sports Club"></div>
-              <div class="form-group" style="justify-content:flex-end;">
-                <button type="submit" class="btn">Create Academy</button></div>
+            <form id="tenantForm">
+              <div class="form-group full"><label>New Academy Name</label>
+                <input type="text" id="t_name" placeholder="e.g. Coastal Football Academy"></div>
+              <div class="form-group full mt"><label>Sports this academy runs (pick one for a single-sport academy)</label>
+                <div id="t_sports" class="sport-checks"></div></div>
+              <button type="submit" class="btn mt">Create Academy</button>
             </form>
-            <div style="overflow-x:auto;">
+            <div style="overflow-x:auto; margin-top:0.5rem;">
               <table class="sams-table" id="tenantsTable">
-                <thead><tr><th>ID</th><th>Name</th></tr></thead><tbody></tbody>
+                <thead><tr><th>ID</th><th>Name</th><th>Sports</th></tr></thead><tbody></tbody>
               </table>
             </div>
           </div>

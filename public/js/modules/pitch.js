@@ -49,9 +49,10 @@ async function onSelectPlayer() {
 function populateDropdown() {
   const sel = $('perfPlayerSelect');
   const prev = sel.value;
+  const suffix = (s) => store.isSingleSport() ? '' : ` · ${esc(s.sport)}`;
   sel.innerHTML = '<option value="">Select a player to evaluate...</option>' +
     store.students.filter(s => s.account_status === 'Active')
-      .map(s => `<option value="${s.id}">${esc(s.name)} · ${esc(s.sport)}</option>`).join('');
+      .map(s => `<option value="${s.id}">${esc(s.name)}${suffix(s)}</option>`).join('');
   if (store.getStudent(prev)) sel.value = prev;
 }
 

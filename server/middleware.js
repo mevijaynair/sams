@@ -1,5 +1,6 @@
 // middleware.js — auth, tenant resolution, and permission gates.
 import * as Users from './repos/users.js';
+import * as Tenants from './repos/tenants.js';
 import { db } from './db.js';
 import { permsFor, can } from './permissions.js';
 
@@ -30,6 +31,8 @@ export function resolveTenant(req, res, next) {
   } else {
     req.tenantId = req.user.tenant_id;
   }
+  // Sports the active academy runs (drives single- vs multi-sport UI + validation).
+  req.tenantSports = Tenants.sportsFor(req.tenantId);
   // Coaches are scoped to their sport for student-facing reads.
   req.sportScope = req.user.role === 'coach' ? req.user.sport : null;
   next();

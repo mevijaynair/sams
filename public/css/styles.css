@@ -25,6 +25,8 @@
 html { -webkit-font-smoothing: antialiased; }
 body { background-color: var(--bg-main); color: var(--text-main); line-height: 1.55; font-size: 15px; }
 [hidden] { display: none !important; }
+/* Single-sport academies hide all cross-sport UI (selectors, columns, mix). */
+body.single-sport .sport-scoped { display: none !important; }
 
 /* ===== Login ===== */
 .login-wrap { min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 2rem; }
@@ -105,6 +107,14 @@ body { background-color: var(--bg-main); color: var(--text-main); line-height: 1
   .sidebar { position: static; height: auto; flex-direction: row; flex-wrap: wrap; overflow-x: auto; }
   .nav { flex-direction: row; flex-wrap: wrap; } }
 .mini-h { font-size: 0.8rem; font-weight: 600; color: var(--text-muted); margin-bottom: 0.6rem; }
+
+.sport-checks { display: flex; flex-wrap: wrap; gap: 0.5rem; }
+.sport-checks label { display: inline-flex; align-items: center; gap: 0.4rem; padding: 0.4rem 0.75rem;
+  border: 1px solid var(--border-strong); border-radius: 9999px; cursor: pointer; font-size: 0.85rem;
+  color: var(--text-main); }
+.sport-checks label:has(input:checked) { border-color: var(--brand); background: var(--brand-soft);
+  color: var(--brand-deep); font-weight: 500; }
+.sport-checks input { width: auto; }
 
 h1 { font-size: 1.35rem; font-weight: 600; letter-spacing: -0.01em; }
 h3 { font-weight: 600; }

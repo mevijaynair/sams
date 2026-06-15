@@ -35,7 +35,7 @@ function render() {
     return `<tr>
       <td><div style="font-weight:500;">${esc(s.name)}</div>
           <div style="font-size:0.72rem;color:var(--text-faint);">${esc(s.id).slice(0, 8)}</div></td>
-      <td><span class="tag">${esc(s.sport)}</span></td>
+      <td class="sport-scoped"><span class="tag">${esc(s.sport)}</span></td>
       <td>${esc(s.age_group)}</td>
       <td>${eidLine}</td>
       <td>${esc(planCell(s))}</td>

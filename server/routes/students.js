@@ -15,14 +15,24 @@ router.get('/:id', (req, res) => {
   res.json(s);
 });
 
+// A student's sport must be one the academy actually runs; coerce to the only
+// sport for single-sport academies, default to the first otherwise.
+function coerceSport(req) {
+  const allowed = req.tenantSports || [];
+  if (req.body.sport && allowed.includes(req.body.sport)) return;
+  req.body.sport = allowed[0] || 'Football';
+}
+
 router.post('/', (req, res) => {
   if (!req.body.name || !req.body.age_group) {
     return res.status(400).json({ error: 'name and age_group are required' });
   }
+  coerceSport(req);
   res.status(201).json(Students.create(req.tenantId, req.body));
 });
 
 router.put('/:id', (req, res) => {
+  if (req.body.sport !== undefined) coerceSport(req);
   const updated = Students.update(req.tenantId, req.params.id, req.body);
   if (!updated) return res.status(404).json({ error: 'Not found' });
   res.json(updated);

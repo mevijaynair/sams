@@ -15,10 +15,11 @@ import { initSettings, loadTenants } from './modules/settings.js';
 const $ = (id) => document.getElementById(id);
 
 const DEV_ACCOUNTS = [
-  { email: 'super@sams.dev', password: 'super123', label: 'Super Admin' },
-  { email: 'admin@apex.dev', password: 'admin123', label: 'Academy Admin (Apex)' },
+  { email: 'super@sams.dev', password: 'super123', label: 'Super Admin (all academies)' },
+  { email: 'admin@apex.dev', password: 'admin123', label: 'Admin · Apex Football (single-sport)' },
   { email: 'football@apex.dev', password: 'coach123', label: 'Coach · Football' },
-  { email: 'cricket@apex.dev', password: 'coach123', label: 'Coach · Cricket' }
+  { email: 'admin@royal.dev', password: 'admin123', label: 'Admin · Royal Cricket (single-sport)' },
+  { email: 'admin@skyline.dev', password: 'admin123', label: 'Admin · Skyline (multi-sport)' }
 ];
 
 let modulesReady = false;
@@ -49,8 +50,8 @@ async function enterApp(user) {
   $('userAvatar').textContent = initials(user.name);
 
   await setupTenantSelector();
-  setContext();
-  initModulesOnce();
+  applyTenant();                      // sets sports + single-sport mode + context
+  initModulesOnce();                  // modules read store.tenantSports on init
   buildNav();
   await refreshActiveData();          // initial load
   showView(defaultView());
@@ -60,19 +61,31 @@ function initials(name) {
   return String(name || '').trim().split(/\s+/).slice(0, 2).map(w => w[0] || '').join('').toUpperCase();
 }
 
-// The academy-name breadcrumb under the page title.
-function setContext() {
-  const sel = $('tenantSelector');
+let tenantsById = {};
+
+// Recompute the active academy's sports, toggle single-sport mode, set context.
+function applyTenant() {
+  const sports = store.isSuper()
+    ? (tenantsById[store.tenantId]?.sports || ['Football'])
+    : (store.user?.tenantSports || ['Football']);
+  store.tenantSports = sports;
+  document.body.classList.toggle('single-sport', store.isSingleSport());
+
   const academy = store.isSuper()
-    ? (sel.selectedOptions[0]?.textContent || '')
+    ? (tenantsById[store.tenantId]?.name || '')
     : (store.user?.tenantName || '');
-  $('pageContext').textContent = academy;
+  $('pageContext').textContent = store.isSingleSport()
+    ? `${academy} · ${sports[0]}` : academy;
+
+  // Let already-initialised modules re-scope their sport selects to this academy.
+  window.dispatchEvent(new CustomEvent('sams:tenant'));
 }
 
 async function setupTenantSelector() {
   const sel = $('tenantSelector');
+  const tenants = await api.tenants();          // own tenant for non-super; all for super
+  tenantsById = Object.fromEntries(tenants.map(t => [t.id, t]));
   if (!store.isSuper()) { sel.hidden = true; return; }
-  const tenants = await api.tenants();
   sel.hidden = false;
   sel.innerHTML = tenants.map(t => `<option value="${t.id}">${t.name}</option>`).join('');
   if (!store.tenantId) store.tenantId = tenants[0]?.id || null;
@@ -111,7 +124,7 @@ function wireAuth() {
 
   $('tenantSelector').addEventListener('change', async (e) => {
     store.tenantId = e.target.value;
-    setContext();
+    applyTenant();                       // also broadcasts sams:tenant for module re-scope
     await refreshActiveData();
     reloadCurrentView();
   });

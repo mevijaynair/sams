@@ -14,8 +14,9 @@ function feeLine(s) {
 function populateDropdown() {
   const sel = $('commsPlayerSelect');
   const prev = sel.value;
+  const suffix = (s) => store.isSingleSport() ? '' : ` · ${esc(s.sport)}`;
   sel.innerHTML = '<option value="">Select student...</option>' +
-    store.students.map(s => `<option value="${s.id}">${esc(s.name)} · ${esc(s.sport)}</option>`).join('');
+    store.students.map(s => `<option value="${s.id}">${esc(s.name)}${suffix(s)}</option>`).join('');
   if (store.getStudent(prev)) sel.value = prev;
 }
 

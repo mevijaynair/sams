@@ -4,19 +4,16 @@ import * as Users from '../repos/users.js';
 import { verifyPassword } from '../auth.js';
 import { permsFor, ROLE_LABELS } from '../permissions.js';
 import { requireAuth } from '../middleware.js';
-import { db } from '../db.js';
+import * as Tenants from '../repos/tenants.js';
 
 const router = Router();
 
 function publicUser(u) {
-  let tenantName = null;
-  if (u.tenant_id) {
-    const t = db.prepare('SELECT name FROM tenants WHERE id = ?').get(u.tenant_id);
-    tenantName = t?.name || null;
-  }
+  const tenant = u.tenant_id ? Tenants.get(u.tenant_id) : null;
   return {
     id: u.id, name: u.name, email: u.email, role: u.role, roleLabel: ROLE_LABELS[u.role] || u.role,
-    tenant_id: u.tenant_id, tenantName, sport: u.sport, permissions: permsFor(u.role)
+    tenant_id: u.tenant_id, tenantName: tenant?.name || null, tenantSports: tenant?.sports || null,
+    sport: u.sport, permissions: permsFor(u.role)
   };
 }
 

@@ -2,7 +2,7 @@
 import { api } from '../api.js';
 import { store, toast } from '../store.js';
 import { reloadStudents } from '../data.js';
-import { SPORTS, AGE_GROUPS, FEE_PLANS } from '../config.js';
+import { AGE_GROUPS, FEE_PLANS } from '../config.js';
 
 const $ = (id) => document.getElementById(id);
 
@@ -13,7 +13,8 @@ const RATE_LABELS = {
 };
 
 function populateSelects() {
-  $('f_sport').innerHTML = SPORTS.map(s => `<option>${s}</option>`).join('');
+  // Only the sports this academy actually runs (one option for single-sport).
+  $('f_sport').innerHTML = store.tenantSports.map(s => `<option>${s}</option>`).join('');
   $('f_ageGroup').innerHTML = AGE_GROUPS.map(a => `<option value="${a.value}">${a.label}</option>`).join('');
   $('f_feePlan').innerHTML = FEE_PLANS.map(p => `<option value="${p.value}">${p.label}</option>`).join('');
 }
@@ -81,6 +82,7 @@ export function editStudent(id) {
 export function initAdmin() {
   populateSelects();
   applyConditional();
+  window.addEventListener('sams:tenant', populateSelects);   // re-scope sports on tenant switch
 
   $('f_feePlan').addEventListener('change', applyConditional);
   $('f_accountStatus').addEventListener('change', applyConditional);

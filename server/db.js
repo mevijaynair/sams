@@ -22,8 +22,9 @@ db.exec('PRAGMA foreign_keys = ON;');
 
 const SCHEMA = `
 CREATE TABLE IF NOT EXISTS tenants (
-  id    TEXT PRIMARY KEY,
-  name  TEXT NOT NULL
+  id      TEXT PRIMARY KEY,
+  name    TEXT NOT NULL,
+  sports  TEXT NOT NULL DEFAULT '["Football"]'   -- JSON array of sports the academy runs
 );
 
 CREATE TABLE IF NOT EXISTS users (
@@ -102,9 +103,12 @@ export function seed() {
   }
   const now = new Date().toISOString();
 
-  const insTenant = db.prepare('INSERT INTO tenants (id, name) VALUES (?, ?)');
-  insTenant.run('ACAD_01', 'Apex Multi-Sport Academy');
-  insTenant.run('ACAD_02', 'Elite Strikers Club');
+  // Academies are sport-specific. Two single-sport academies (the common case)
+  // and one multi-sport club to show the platform accommodates several sports.
+  const insTenant = db.prepare('INSERT INTO tenants (id, name, sports) VALUES (?, ?, ?)');
+  insTenant.run('ACAD_01', 'Apex Football Academy', JSON.stringify(['Football']));
+  insTenant.run('ACAD_02', 'Royal Cricket Academy', JSON.stringify(['Cricket']));
+  insTenant.run('ACAD_03', 'Skyline Sports Club', JSON.stringify(['Football', 'Basketball', 'Badminton']));
 
   // --- users (dev passwords are intentionally simple) ---
   const insUser = db.prepare(`
@@ -116,11 +120,13 @@ export function seed() {
 
   mk('u_super', null, 'System Owner', 'super@sams.dev', 'super123', 'super_admin', null);
   mk('u_admin1', 'ACAD_01', 'Apex Admin', 'admin@apex.dev', 'admin123', 'admin', null);
-  mk('u_coach_fb', 'ACAD_01', 'Coach Diego (Football)', 'football@apex.dev', 'coach123', 'coach', 'Football');
-  mk('u_coach_ck', 'ACAD_01', 'Coach Imran (Cricket)', 'cricket@apex.dev', 'coach123', 'coach', 'Cricket');
-  mk('u_admin2', 'ACAD_02', 'Elite Admin', 'admin@elite.dev', 'admin123', 'admin', null);
+  mk('u_coach_fb', 'ACAD_01', 'Coach Diego', 'football@apex.dev', 'coach123', 'coach', 'Football');
+  mk('u_admin2', 'ACAD_02', 'Royal Admin', 'admin@royal.dev', 'admin123', 'admin', null);
+  mk('u_coach_ck', 'ACAD_02', 'Coach Imran', 'cricket@royal.dev', 'coach123', 'coach', 'Cricket');
+  mk('u_admin3', 'ACAD_03', 'Skyline Admin', 'admin@skyline.dev', 'admin123', 'admin', null);
+  mk('u_coach_bb', 'ACAD_03', 'Coach Marcus', 'basketball@skyline.dev', 'coach123', 'coach', 'Basketball');
 
-  // --- students across sports & fee plans ---
+  // --- students (each student's sport is one the academy actually runs) ---
   const insStudent = db.prepare(`
     INSERT INTO students
       (id, tenant_id, name, sport, age_group, eid_number, eid_expiry, fee_plan_type, fee_rate,
@@ -128,24 +134,33 @@ export function seed() {
        account_status, exit_reason, created_at)
     VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
   `);
+  // Apex Football Academy (single-sport)
   insStudent.run('s1', 'ACAD_01', 'Zayd Nair', 'Football', 'U10-U13', '784-1980-1234567-1',
     '2027-12-31', 'monthly', 450, 0, 0, '', 'Paid', '2026-06-01', 'Active', '', now);
   insStudent.run('s2', 'ACAD_01', 'Ryan Al-Mansoori', 'Football', 'U14-U18', '784-2008-7654321-2',
     '2026-05-15', 'per_session', 60, 0, 0, 'July-August', 'Due', '2026-04-01', 'Active', '', now);
-  insStudent.run('s3', 'ACAD_01', 'Aarav Sharma', 'Cricket', 'U10-U13', '784-2014-2223334-4',
+  insStudent.run('s3', 'ACAD_01', 'Sami Okafor', 'Football', 'U6-U9', '784-2016-9990001-6',
+    '2028-02-01', 'monthly', 400, 0, 0, '', 'Paid', '2026-06-02', 'Active', '', now);
+  // Royal Cricket Academy (single-sport)
+  insStudent.run('s4', 'ACAD_02', 'Aarav Sharma', 'Cricket', 'U10-U13', '784-2014-2223334-4',
     '2028-03-10', 'package', 800, 16, 11, '', 'Paid', '2026-05-20', 'Active', '', now);
-  insStudent.run('s4', 'ACAD_01', 'Leah Court', 'Basketball', 'U14-U18', '784-2010-5556667-5',
-    '2026-08-01', 'monthly', 400, 0, 0, '', 'Overdue', '2026-03-15', 'Active', '', now);
-  insStudent.run('s5', 'ACAD_02', 'Omar Haddad', 'Badminton', 'U6-U9', '784-2018-1112223-3',
+  insStudent.run('s5', 'ACAD_02', 'Yusuf Khan', 'Cricket', 'U14-U18', '784-2009-4445556-7',
+    '2026-07-01', 'monthly', 500, 0, 0, '', 'Overdue', '2026-03-15', 'Active', '', now);
+  // Skyline Sports Club (multi-sport)
+  insStudent.run('s6', 'ACAD_03', 'Leah Court', 'Basketball', 'U14-U18', '784-2010-5556667-5',
+    '2026-08-01', 'monthly', 400, 0, 0, '', 'Due', '2026-04-15', 'Active', '', now);
+  insStudent.run('s7', 'ACAD_03', 'Omar Haddad', 'Badminton', 'U6-U9', '784-2018-1112223-3',
     '2028-01-20', 'package', 500, 10, 3, '', 'Due', '2026-04-10', 'Active', '', now);
+  insStudent.run('s8', 'ACAD_03', 'Diego Reyes', 'Football', 'U10-U13', '784-2015-7778889-8',
+    '2027-11-11', 'monthly', 450, 0, 0, '', 'Paid', '2026-06-01', 'Active', '', now);
 
   const insEval = db.prepare(`
     INSERT INTO evaluations (id, tenant_id, student_id, recorded_at, metrics) VALUES (?,?,?,?,?)
   `);
   insEval.run('e1', 'ACAD_01', 's1', now,
-    JSON.stringify({ passing_accuracy: '85', one_v_one_success: '78', juggling_reps: '40' }));
+    JSON.stringify({ passing_accuracy: '85', one_v_one_success: '78', sprint_counts: '14' }));
 
-  console.log('Seeded 2 tenants, 5 users, 5 students.');
+  console.log('Seeded 3 tenants, 7 users, 8 students.');
 }
 
 // Allow `node server/db.js --seed`

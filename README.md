@@ -1,10 +1,15 @@
 # SAMS — Sports Academy Management System
 
-Multi-tenant, multi-sport academy operations with role-based access:
+Multi-tenant academy operations with role-based access. The platform supports
+many sports, but **sport belongs to the academy**: each academy is configured
+with the sport(s) it runs. Single-sport academies (the common case) get a fully
+sport-aligned experience — no sport pickers, columns, or cross-sport breakdowns;
+the sport is shown as the academy's identity. An academy can be configured for
+several sports, and only then do sport selectors/breakdowns appear.
 
 - **Auth & RBAC** — login with 3 roles (Super Admin, Academy Admin, Coach)
-- **Multi-sport** — Football / Cricket / Basketball / Badminton, sport-specific
-  performance metric matrices
+- **Sport per academy** — Football / Cricket / Basketball / Badminton, with
+  sport-specific performance metric matrices; UI auto-adapts single vs multi-sport
 - **Enrolment & UAE compliance** — EID vault + expiry watchlist
 - **Modular fees** — Monthly flat / Per-session (rate × sessions) / Package
   (prepaid sessions, counted down)
@@ -38,13 +43,15 @@ Reset the database: stop the server and delete `data/sams.db*`, then start again
 
 The login screen has one-click **DEV quick-login** buttons. Credentials:
 
-| Role          | Email               | Password   | Scope |
-|---------------|---------------------|------------|-------|
-| Super Admin   | super@sams.dev      | super123   | all academies; manages tenants & users |
-| Academy Admin | admin@apex.dev      | admin123   | full access within Apex |
-| Coach         | football@apex.dev   | coach123   | Apex · Football only (read students, attendance + performance) |
-| Coach         | cricket@apex.dev    | coach123   | Apex · Cricket only |
-| Academy Admin | admin@elite.dev     | admin123   | full access within Elite Strikers |
+| Role          | Email                  | Password   | Scope |
+|---------------|------------------------|------------|-------|
+| Super Admin   | super@sams.dev         | super123   | all academies; manages tenants & users |
+| Academy Admin | admin@apex.dev         | admin123   | Apex Football Academy (single-sport) |
+| Coach         | football@apex.dev      | coach123   | Apex · Football (read students, attendance + performance) |
+| Academy Admin | admin@royal.dev        | admin123   | Royal Cricket Academy (single-sport) |
+| Coach         | cricket@royal.dev      | coach123   | Royal · Cricket |
+| Academy Admin | admin@skyline.dev      | admin123   | Skyline Sports Club (multi-sport: Football/Basketball/Badminton) |
+| Coach         | basketball@skyline.dev | coach123   | Skyline · Basketball |
 
 > ⚠️ Dev passwords are intentionally weak and quick-login is a dev convenience —
 > remove `DEV_ACCOUNTS` (in `public/js/main.js`) and the quick-login panel before
@@ -79,7 +86,7 @@ server/
   permissions.js    RBAC matrix (roles → permissions)
   middleware.js     requireAuth, resolveTenant, requirePerm
   billing.js        modular fee computation (pure functions)
-  repos/            students, evaluations, attendance, users (tenant-scoped)
+  repos/            students, evaluations, attendance, users, tenants (tenant-scoped)
   routes/           auth, students, evaluations, attendance, analytics,
                     billing, users, tenants, export, index (auth+gates)
 public/
