@@ -88,6 +88,51 @@ CREATE TABLE IF NOT EXISTS attendance (
   UNIQUE(student_id, session_date)
 );
 CREATE INDEX IF NOT EXISTS idx_att_tenant_date ON attendance(tenant_id, session_date);
+
+-- Parent/Guardian management (1-to-many: one parent can have multiple children)
+CREATE TABLE IF NOT EXISTS parents (
+  id             TEXT PRIMARY KEY,
+  tenant_id      TEXT NOT NULL REFERENCES tenants(id),
+  name           TEXT NOT NULL,
+  email          TEXT,
+  phone          TEXT,
+  relationship   TEXT NOT NULL DEFAULT 'Parent',  -- Parent | Guardian | Emergency Contact
+  active         INTEGER NOT NULL DEFAULT 1,
+  created_at     TEXT NOT NULL
+);
+CREATE INDEX IF NOT EXISTS idx_parents_tenant ON parents(tenant_id);
+
+-- Junction: link students to parents (many-to-many)
+CREATE TABLE IF NOT EXISTS student_parents (
+  id             TEXT PRIMARY KEY,
+  tenant_id      TEXT NOT NULL REFERENCES tenants(id),
+  student_id     TEXT NOT NULL REFERENCES students(id) ON DELETE CASCADE,
+  parent_id      TEXT NOT NULL REFERENCES parents(id) ON DELETE CASCADE,
+  is_primary     INTEGER NOT NULL DEFAULT 0,  -- Primary contact for communications
+  created_at     TEXT NOT NULL,
+  UNIQUE(student_id, parent_id)
+);
+CREATE INDEX IF NOT EXISTS idx_stud_parent ON student_parents(student_id);
+CREATE INDEX IF NOT EXISTS idx_parent_students ON student_parents(parent_id);
+
+-- Audit log for super_admin actions (track all changes)
+CREATE TABLE IF NOT EXISTS audit_log (
+  id             TEXT PRIMARY KEY,
+  tenant_id      TEXT REFERENCES tenants(id),  -- NULL for super_admin actions on tenants
+  actor_id       TEXT NOT NULL REFERENCES users(id),
+  actor_role     TEXT NOT NULL,                 -- super_admin | super_super_admin | admin | coach
+  entity_type    TEXT NOT NULL,                 -- students | parents | users | tenants | etc.
+  entity_id      TEXT NOT NULL,
+  action         TEXT NOT NULL,                 -- create | update | delete | export
+  before_state   TEXT,                          -- JSON snapshot of previous state
+  after_state    TEXT,                          -- JSON snapshot of new state
+  reason         TEXT,                          -- why the action was taken
+  ip_address     TEXT,
+  created_at     TEXT NOT NULL
+);
+CREATE INDEX IF NOT EXISTS idx_audit_tenant ON audit_log(tenant_id, created_at);
+CREATE INDEX IF NOT EXISTS idx_audit_actor ON audit_log(actor_id, created_at);
+CREATE INDEX IF NOT EXISTS idx_audit_entity ON audit_log(entity_type, entity_id);
 `;
 
 export function initSchema() {

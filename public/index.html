@@ -258,6 +258,89 @@
           </div>
         </section>
 
+        <!-- PARENTS -->
+        <section class="view" data-view="parents" hidden>
+          <div class="sams-card">
+            <div class="card-header">
+              <h3 class="card-title">Parent / Guardian Management</h3>
+              <button class="btn btn-secondary btn-sm" id="toggleParentForm">+ Add parent</button>
+            </div>
+            <form id="parentForm" hidden>
+              <input type="hidden" id="parentId">
+              <div class="form-row">
+                <div class="form-group"><label>Parent Full Name *</label>
+                  <input type="text" id="p_name" required placeholder="Jane Doe"></div>
+                <div class="form-group"><label>Relationship *</label>
+                  <select id="p_relationship">
+                    <option value="Parent">Parent</option>
+                    <option value="Guardian">Guardian</option>
+                    <option value="Emergency Contact">Emergency Contact</option>
+                  </select></div>
+              </div>
+              <div class="form-row mt">
+                <div class="form-group"><label>Email</label>
+                  <input type="email" id="p_email" placeholder="parent@email.com"></div>
+                <div class="form-group"><label>Phone</label>
+                  <input type="tel" id="p_phone" placeholder="+971 50 xxx xxxx"></div>
+              </div>
+              <div style="display:flex; gap:0.6rem; margin-top:1.25rem;">
+                <button type="submit" class="btn" id="p_submit">Save Parent</button>
+                <button type="button" class="btn btn-secondary" id="p_cancel">Cancel</button>
+              </div>
+            </form>
+            <div style="overflow-x:auto;">
+              <table class="sams-table" id="parentsTable">
+                <thead><tr>
+                  <th>Name</th><th>Relationship</th><th>Contact</th><th>Children</th><th></th>
+                </tr></thead>
+                <tbody></tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- Parent Details Modal -->
+          <div id="parentDetailModal" class="modal" hidden>
+            <div class="modal-overlay"></div>
+            <div class="modal-content">
+              <div class="modal-header">
+                <h3 id="parentDetailTitle"></h3>
+                <button class="modal-close" id="parentDetailClose">✕</button>
+              </div>
+              <div class="modal-body" id="parentDetailBody"></div>
+            </div>
+          </div>
+        </section>
+
+        <!-- AUDIT LOG (Super Admin only) -->
+        <section class="view" data-view="audit" hidden>
+          <div class="sams-card">
+            <div class="card-header">
+              <h3 class="card-title">Audit Log & Compliance</h3>
+              <span class="card-sub">All admin actions tracked</span>
+            </div>
+            <div style="display:flex; gap:0.6rem; margin-bottom:1rem;">
+              <select id="auditFilter" style="flex:1;">
+                <option value="">All Actions</option>
+                <option value="students">Students</option>
+                <option value="parents">Parents</option>
+                <option value="users">Users</option>
+                <option value="tenants">Tenants</option>
+              </select>
+              <input type="number" id="auditDays" min="1" max="365" value="30" style="width:80px;" placeholder="Days">
+              <button class="btn btn-secondary btn-sm" id="auditRefresh">Refresh</button>
+              <button class="btn btn-secondary btn-sm" id="auditExport" data-perm="audit:export">Export</button>
+            </div>
+            <div style="overflow-x:auto;">
+              <table class="sams-table" id="auditTable">
+                <thead><tr>
+                  <th>Time</th><th>Actor</th><th>Action</th><th>Entity</th><th>Details</th>
+                </tr></thead>
+                <tbody></tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+
         <!-- USERS -->
         <section class="view" data-view="users" hidden>
           <div class="sams-card">

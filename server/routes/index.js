@@ -9,6 +9,8 @@ import billing from './billing.js';
 import users from './users.js';
 import tenants from './tenants.js';
 import exportRoutes from './export.js';
+import parents from './parents.js';
+import audit from './audit.js';
 import { requireAuth, resolveTenant, requirePerm } from '../middleware.js';
 
 const router = Router();
@@ -30,11 +32,13 @@ function gate(readPerm, writePerm) {
 }
 
 router.use('/students', gate('students:read', 'students:write'), students);
+router.use('/parents', gate('students:read', 'students:write'), parents);  // parents linked to students
 router.use('/evaluations', gate('performance:read', 'performance:write'), evaluations);
 router.use('/attendance', gate('attendance:read', 'attendance:write'), attendance);
 router.use('/analytics', requirePerm('analytics:read'), analytics);
 router.use('/billing', requirePerm('billing:read'), billing);
 router.use('/export', requirePerm('students:read'), exportRoutes);
 router.use('/users', requirePerm('users:manage'), users);
+router.use('/audit', audit);  // audit has its own role checks inside
 
 export default router;

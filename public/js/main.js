@@ -11,6 +11,8 @@ import { initComms } from './modules/comms.js';
 import { initBilling, loadBilling } from './modules/billing.js';
 import { initUsers, loadUsers } from './modules/users.js';
 import { initSettings, loadTenants } from './modules/settings.js';
+import { initParents } from './modules/parents.js';
+import { initAudit } from './modules/audit.js';
 
 const $ = (id) => document.getElementById(id);
 
@@ -27,7 +29,7 @@ let modulesReady = false;
 function initModulesOnce() {
   if (modulesReady) return;
   initAdmin(); initPitch(); initAttendance(); initRoster(); initComms();
-  initBilling(); initUsers(); initSettings();
+  initBilling(); initUsers(); initSettings(); initParents(); initAudit();
   modulesReady = true;
 }
 
