@@ -7,7 +7,6 @@ import { initAdmin } from './modules/admin.js';
 import { initPitch } from './modules/pitch.js';
 import { initAttendance } from './modules/attendance.js';
 import { initRoster } from './modules/roster.js';
-import { initComms } from './modules/comms.js';
 import { initBilling, loadBilling } from './modules/billing.js';
 import { initUsers, loadUsers } from './modules/users.js';
 import { initSettings, loadTenants } from './modules/settings.js';
@@ -28,7 +27,7 @@ let modulesReady = false;
 
 function initModulesOnce() {
   if (modulesReady) return;
-  initAdmin(); initPitch(); initAttendance(); initRoster(); initComms();
+  initAdmin(); initPitch(); initAttendance(); initRoster();
   initBilling(); initUsers(); initSettings(); initParents(); initAudit();
   modulesReady = true;
 }

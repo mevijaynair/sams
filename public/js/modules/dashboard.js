@@ -54,26 +54,12 @@ function showKpiDetail(key, data) {
     </div>`;
   } else if (key === 'revenue') {
     titleText = 'Projected Monthly Revenue';
-    const planBreak = data.planBreakdown || {};
-    const monthly = (planBreak.monthly || 0) * 450; // assumed monthly rate
-    const perSession = (planBreak.per_session || 0) * 250; // assumed per-session rate
-    const pkg = (planBreak.package || 0) * 500; // assumed package rate
+    // Use actual projected revenue from dashboard data (calculated server-side)
     html = `
       <div class="calc-item">
-        <div class="calc-label">Monthly Flat (${planBreak.monthly || 0} students × AED 450)</div>
-        <div class="calc-value">AED ${monthly.toLocaleString()}</div>
-      </div>
-      <div class="calc-item">
-        <div class="calc-label">Per-Session (${planBreak.per_session || 0} students × AED 250 avg)</div>
-        <div class="calc-value">AED ${perSession.toLocaleString()}</div>
-      </div>
-      <div class="calc-item">
-        <div class="calc-label">Package (${planBreak.package || 0} students × AED 500 avg)</div>
-        <div class="calc-value">AED ${pkg.toLocaleString()}</div>
-      </div>
-      <div class="calc-item" style="border-top: 2px solid var(--border-color); padding-top: 1rem; margin-top: 1rem;">
-        <div class="calc-label">Projected Total</div>
-        <div class="calc-value">AED ${(monthly + perSession + pkg).toLocaleString()}</div>
+        <div class="calc-label">Total Projected Revenue</div>
+        <div class="calc-value">AED ${(data.projectedRevenue || 0).toLocaleString()}</div>
+        <div class="calc-detail">Based on ${data.activeStudents || 0} active students and their fee plans.</div>
       </div>`;
   } else if (key === 'due') {
     titleText = 'Payments Due';

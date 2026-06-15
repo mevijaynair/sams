@@ -9,6 +9,7 @@ import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
 import { mkdirSync } from 'node:fs';
 import { hashPassword } from './auth.js';
+import { runMigrations } from './migrations.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const DATA_DIR = join(__dirname, '..', 'data');
@@ -136,7 +137,8 @@ CREATE INDEX IF NOT EXISTS idx_audit_entity ON audit_log(entity_type, entity_id)
 `;
 
 export function initSchema() {
-  db.exec(SCHEMA);
+  // Run migrations to set up or upgrade the database schema
+  runMigrations();
 }
 
 export function seed() {

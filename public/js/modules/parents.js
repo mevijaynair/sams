@@ -125,11 +125,25 @@ async function showParentDetail(parentId) {
                   <span style="font-size:0.75rem; color:var(--text-faint); margin-left:0.5rem;">${esc(child.age_group)}</span>
                   ${child.is_primary ? '<span style="color:var(--success); font-weight:600; margin-left:0.5rem;">★ Primary</span>' : ''}
                 </div>
-                <button class="btn btn-secondary btn-sm" data-set-primary="${child.id}">Set Primary</button>
+                <div style="display:flex; gap:0.4rem;">
+                  <button class="btn btn-secondary btn-sm" data-set-primary="${child.id}">Set Primary</button>
+                  <button class="btn btn-danger btn-sm" data-unlink="${child.id}">Unlink</button>
+                </div>
               </div>
             `).join('')}
           </div>
         ` : '<p class="hint">No children linked yet.</p>'}
+      </div>
+
+      <div style="margin-bottom:1.5rem; padding:0.8rem; background:var(--bg-inset); border-radius:6px;">
+        <h4 style="font-size:0.9rem; font-weight:600; margin-bottom:0.5rem;">Link New Child</h4>
+        <div style="display:flex; gap:0.5rem; align-items:flex-end;">
+          <select id="linkStudentSelect" style="flex:1; padding:0.5rem; border:1px solid var(--border); border-radius:4px;">
+            <option value="">Select a student...</option>
+            ${store.students.map(s => `<option value="${s.id}">${esc(s.name)} (${esc(s.age_group)})</option>`).join('')}
+          </select>
+          <button class="btn btn-secondary btn-sm" id="linkBtn">Link</button>
+        </div>
       </div>
 
       <div style="display:flex; gap:0.6rem;">
@@ -149,15 +163,45 @@ async function showParentDetail(parentId) {
       $('parentDetailModal').hidden = true;
     });
 
-    // Set primary contact
+    // Set primary contact, unlink, and link handlers
     body.addEventListener('click', async (e) => {
       const setPrimBtn = e.target.closest('[data-set-primary]');
+      const unlinkBtn = e.target.closest('[data-unlink]');
+      const linkBtn = e.target.closest('#linkBtn');
+
       if (setPrimBtn) {
         const childId = setPrimBtn.dataset.setPrimary;
         try {
           await api.post(`/parents/${parentId}/set-primary`, { studentId: childId });
           await showParentDetail(parentId);  // Refresh
           toast('Primary contact updated');
+        } catch (err) {
+          toast(err.message, true);
+        }
+      }
+
+      if (unlinkBtn) {
+        const childId = unlinkBtn.dataset.unlink;
+        if (!confirm('Unlink this child from the parent?')) return;
+        try {
+          await api.post(`/parents/${parentId}/unlink-student`, { studentId: childId });
+          await showParentDetail(parentId);  // Refresh
+          toast('Child unlinked');
+        } catch (err) {
+          toast(err.message, true);
+        }
+      }
+
+      if (linkBtn) {
+        const studentId = document.getElementById('linkStudentSelect').value;
+        if (!studentId) {
+          toast('Please select a student', true);
+          return;
+        }
+        try {
+          await api.post(`/parents/${parentId}/link-student`, { studentId });
+          await showParentDetail(parentId);  // Refresh
+          toast('Child linked successfully');
         } catch (err) {
           toast(err.message, true);
         }

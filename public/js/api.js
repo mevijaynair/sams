@@ -1,17 +1,71 @@
 // api.js — fetch wrapper. Adds the auth token and (for super admins) the active
-// tenant header on every call.
+// tenant header on every call. Handles JWT token refresh automatically.
 import { store, toast } from './store.js';
+
+let isRefreshing = false;
+let refreshPromise = null;
+
+// Refresh the access token using the httpOnly refresh token
+async function refreshAccessToken() {
+  if (isRefreshing) return refreshPromise;
+  isRefreshing = true;
+
+  refreshPromise = (async () => {
+    try {
+      const res = await fetch('/api/auth/refresh', {
+        method: 'POST',
+        credentials: 'include', // Include cookies (httpOnly refreshToken)
+        headers: { 'Content-Type': 'application/json' }
+      });
+
+      if (!res.ok) {
+        throw new Error('Refresh failed');
+      }
+
+      const { accessToken } = await res.json();
+      store.setToken(accessToken);
+      return accessToken;
+    } catch (err) {
+      handleUnauthorized();
+      throw err;
+    } finally {
+      isRefreshing = false;
+      refreshPromise = null;
+    }
+  })();
+
+  return refreshPromise;
+}
 
 async function req(method, path, body) {
   const headers = {};
   if (store.token) headers['Authorization'] = `Bearer ${store.token}`;
   if (store.isSuper() && store.tenantId) headers['X-Tenant-Id'] = store.tenantId;
-  const opts = { method, headers };
+  const opts = { method, headers, credentials: 'include' }; // Include cookies for refresh token
   if (body !== undefined) {
     headers['Content-Type'] = 'application/json';
     opts.body = JSON.stringify(body);
   }
-  const res = await fetch(`/api${path}`, opts);
+
+  let res = await fetch(`/api${path}`, opts);
+
+  // If 401, try to refresh the token and retry
+  if (res.status === 401 && store.token) {
+    try {
+      await refreshAccessToken();
+      // Rebuild the request with the new token
+      headers['Authorization'] = `Bearer ${store.token}`;
+      const retryOpts = { method, headers, credentials: 'include' };
+      if (body !== undefined) {
+        retryOpts.body = JSON.stringify(body);
+      }
+      res = await fetch(`/api${path}`, retryOpts);
+    } catch {
+      handleUnauthorized();
+      throw new Error('Session expired');
+    }
+  }
+
   if (res.status === 401) { handleUnauthorized(); throw new Error('Session expired'); }
   if (res.status === 204) return null;
   const data = await res.json().catch(() => ({}));
@@ -26,7 +80,11 @@ function handleUnauthorized() {
 }
 
 export const api = {
-  login: (email, password) => req('POST', '/auth/login', { email, password }),
+  login: async (email, password) => {
+    const { accessToken, user } = await req('POST', '/auth/login', { email, password });
+    store.setToken(accessToken);
+    return { token: accessToken, user };
+  },
   logout: () => req('POST', '/auth/logout'),
   me: () => req('GET', '/auth/me'),
 
@@ -55,7 +113,7 @@ export const api = {
   async downloadCsv() {
     const headers = { Authorization: `Bearer ${store.token}` };
     if (store.isSuper() && store.tenantId) headers['X-Tenant-Id'] = store.tenantId;
-    const res = await fetch('/api/export/students.csv', { headers });
+    const res = await fetch('/api/export/students.csv', { headers, credentials: 'include' });
     if (!res.ok) throw new Error('Export failed');
     const blob = await res.blob();
     const url = URL.createObjectURL(blob);

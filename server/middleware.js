@@ -3,13 +3,28 @@ import * as Users from './repos/users.js';
 import * as Tenants from './repos/tenants.js';
 import { db } from './db.js';
 import { permsFor, can } from './permissions.js';
+import { verifyJWT } from './auth.js';
 
 // Attaches req.user (with .permissions) or 401s.
 export function requireAuth(req, res, next) {
   const auth = req.get('Authorization') || '';
   const token = auth.startsWith('Bearer ') ? auth.slice(7) : null;
-  const u = Users.userForToken(token);
-  if (!u) return res.status(401).json({ error: 'Not authenticated' });
+
+  if (!token) {
+    return res.status(401).json({ error: 'Not authenticated' });
+  }
+
+  // Verify JWT token
+  const payload = verifyJWT(token);
+  if (!payload || payload.type !== 'access') {
+    return res.status(401).json({ error: 'Invalid or expired token' });
+  }
+
+  const u = Users.findById(payload.sub);
+  if (!u || !u.active) {
+    return res.status(401).json({ error: 'User not found or inactive' });
+  }
+
   req.user = {
     id: u.id, name: u.name, email: u.email, role: u.role,
     tenant_id: u.tenant_id, sport: u.sport, permissions: permsFor(u.role)

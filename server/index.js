@@ -16,6 +16,17 @@ seed();
 const app = express();
 app.use(express.json());
 
+// Parse cookies for refresh token in httpOnly cookie
+app.use((req, res, next) => {
+  const cookies = {};
+  (req.get('cookie') || '').split(/;\s*/).forEach(c => {
+    const [k, v] = c.split('=');
+    if (k) cookies[k] = decodeURIComponent(v || '');
+  });
+  req.cookies = cookies;
+  next();
+});
+
 app.get('/api/health', (_req, res) => res.json({ ok: true }));
 app.use('/api', api);
 
