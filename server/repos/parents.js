@@ -1,11 +1,11 @@
 // parents.js — parent/guardian management with multi-child linking
 import { db } from '../db.js';
-import { v4 as uuid } from 'uuid';
+import { randomUUID } from 'node:crypto';
 
 export const Parents = {
   // Create a parent/guardian
   create(tenantId, { name, email, phone, relationship = 'Parent' }) {
-    const id = uuid();
+    const id = randomUUID();
     db.prepare(`
       INSERT INTO parents (id, tenant_id, name, email, phone, relationship, created_at)
       VALUES (?, ?, ?, ?, ?, ?, ?)
@@ -65,7 +65,7 @@ export const Parents = {
 
   // Link a student to a parent
   linkStudent(tenantId, studentId, parentId, isPrimary = 0) {
-    const id = uuid();
+    const id = randomUUID();
     db.prepare(`
       INSERT INTO student_parents (id, tenant_id, student_id, parent_id, is_primary, created_at)
       VALUES (?, ?, ?, ?, ?, ?)

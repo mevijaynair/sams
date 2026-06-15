@@ -1,6 +1,6 @@
 // auditLog.js — audit trail for super_admin and super_super_admin actions
 import { db } from '../db.js';
-import { v4 as uuid } from 'uuid';
+import { randomUUID } from 'node:crypto';
 
 export const AuditLog = {
   // Log an action (create/update/delete)
@@ -13,7 +13,7 @@ export const AuditLog = {
     afterState = null,
     reason = null
   }) {
-    const id = uuid();
+    const id = randomUUID();
     const actor = req.user || {};
 
     db.prepare(`
