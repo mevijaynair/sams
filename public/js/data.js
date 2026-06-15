@@ -7,8 +7,10 @@ let dashboardInitialized = false;
 
 export async function reloadStudents() {
   try {
-    const list = await api.students();
-    store.setStudents(list);          // triggers subscribed re-renders
+    const response = await api.students();
+    // API returns paginated object {total, limit, offset, students}
+    const list = response.students || response;  // fallback for old format
+    store.setStudents(Array.isArray(list) ? list : []);
     if (store.can('analytics:read')) await reloadAnalytics();
   } catch (e) {
     toast(e.message, true);
