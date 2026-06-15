@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SAMS — Sports Academy Management System</title>
+  <link rel="stylesheet" href="/css/styles.css">
+</head>
+<body>
+
+  <header>
+    <div>
+      <h1 style="font-size: 1.5rem; font-weight: 700;">SAMS // Sports Academy Management System</h1>
+      <p class="card-sub">Unified Field Operations &amp; Administration · live multi-tenant backend</p>
+    </div>
+    <div style="display: flex; align-items: center; gap: 1rem;">
+      <select id="tenantSelector" style="width: auto;"></select>
+      <span class="tenant-badge" id="activeTenantDisplay">Tenant: —</span>
+    </div>
+  </header>
+
+  <!-- Dashboard KPIs -->
+  <div class="kpi-strip" id="kpiStrip"></div>
+
+  <div class="toggle-container">
+    <button class="btn btn-secondary" data-toggle="adminCard">Admin Intake</button>
+    <button class="btn btn-secondary" data-toggle="pitchCard">Pitch Performance</button>
+    <button class="btn btn-secondary" data-toggle="attendanceCard">Attendance Roster</button>
+    <button class="btn btn-secondary" data-toggle="rosterCard">Central Registry</button>
+    <button class="btn btn-secondary" data-toggle="commsCard">Parent Comms</button>
+    <button class="btn btn-secondary" data-toggle="analyticsCard">Billing &amp; Churn</button>
+  </div>
+
+  <div class="sams-grid">
+
+    <!-- ADMIN / COMPLIANCE -->
+    <section class="sams-card" id="adminCard">
+      <div class="card-header">
+        <h2 class="card-title">📝 Admin Operations &amp; Compliance</h2>
+        <span class="card-sub">Enrolment · EID Vault · Billing</span>
+      </div>
+      <form id="studentForm">
+        <input type="hidden" id="studentId">
+        <div class="form-row">
+          <div class="form-group">
+            <label>Student Full Name *</label>
+            <input type="text" id="f_name" required placeholder="John Doe">
+          </div>
+          <div class="form-group">
+            <label>Age Bracket *</label>
+            <select id="f_ageGroup" required>
+              <option value="U6-U9">Grassroots (U6-U9)</option>
+              <option value="U10-U13">Development (U10-U13)</option>
+              <option value="U14-U18">Competitive (U14-U18)</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="form-row mt">
+          <div class="form-group">
+            <label>Emirates ID (EID) Number</label>
+            <input type="text" id="f_eidNumber" placeholder="784-YYYY-XXXXXXX-Z">
+          </div>
+          <div class="form-group">
+            <label>EID Expiry Date</label>
+            <input type="date" id="f_eidExpiry">
+          </div>
+        </div>
+
+        <div class="form-group full mt">
+          <label>EID Document Verification Scan (mock upload)</label>
+          <div class="file-dropzone" id="f_dropzone">Drop compliance documents here or click to upload</div>
+        </div>
+
+        <div class="form-row mt">
+          <div class="form-group">
+            <label>Tuition Tier Matrix</label>
+            <select id="f_billingStructure">
+              <option value="Standard">Standard Term Plan</option>
+              <option value="Custom">Custom Override (Scholarship/Sibling)</option>
+              <option value="Paused">Holiday Freeze Structure</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Monthly Fee (AED)</label>
+            <input type="number" id="f_monthlyFee" min="0" step="50" value="450">
+          </div>
+        </div>
+
+        <div class="form-row mt">
+          <div class="form-group" id="g_discount" style="display:none;">
+            <label>Discount / Override Note</label>
+            <input type="text" id="f_discountNote" placeholder="e.g. Sibling 20% / Scholarship">
+          </div>
+          <div class="form-group" id="g_freeze" style="display:none;">
+            <label>Holiday Freeze Range</label>
+            <input type="text" id="f_freezeRange" placeholder="e.g. July - August">
+          </div>
+        </div>
+
+        <div class="form-row mt">
+          <div class="form-group">
+            <label>Payment Status</label>
+            <select id="f_paymentStatus">
+              <option value="Paid">Paid</option>
+              <option value="Due">Due</option>
+              <option value="Overdue">Overdue</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Account Status</label>
+            <select id="f_accountStatus">
+              <option value="Active">Active Enrolment</option>
+              <option value="Exited">Exited Academy</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="form-row mt">
+          <div class="form-group" id="g_exit" style="display:none;">
+            <label>Operational Exit Reason Tag</label>
+            <select id="f_exitReason">
+              <option value="">Select reason...</option>
+              <option value="Relocation">Expat Relocation / Leaving UAE</option>
+              <option value="Financial">Financial / Pricing Friction</option>
+              <option value="Academic">School Timetable Conflict</option>
+              <option value="Competitor">Churned to Rival Academy</option>
+            </select>
+          </div>
+        </div>
+
+        <div style="display:flex; gap:0.75rem; margin-top:1.5rem;">
+          <button type="submit" class="btn full-w" id="f_submit">Commit Record to SAMS Core</button>
+          <button type="button" class="btn btn-secondary" id="f_reset">Clear</button>
+        </div>
+      </form>
+    </section>
+
+    <!-- PITCH PERFORMANCE -->
+    <section class="sams-card" id="pitchCard">
+      <div class="card-header">
+        <h2 class="card-title">⚽ Pitch Performance Tracking</h2>
+        <span class="card-sub">Age-Group Evaluation Matrix</span>
+      </div>
+      <div class="form-group">
+        <label>Active Target Player</label>
+        <select id="perfPlayerSelect"><option value="">Select committed player to evaluate...</option></select>
+      </div>
+      <div id="dynamicMetricContainer" style="display:flex; flex-direction:column; gap:1rem;">
+        <p class="muted">Select a player to unlock specialized developmental scoring profiles.</p>
+      </div>
+      <div id="perfHistory" class="hint"></div>
+      <button class="btn full-w" id="perfSave">Save Pitch Evaluation Log</button>
+    </section>
+
+    <!-- ATTENDANCE ROSTER -->
+    <section class="sams-card span-2" id="attendanceCard">
+      <div class="card-header">
+        <h2 class="card-title">✅ Attendance Roster Engine</h2>
+        <div style="display:flex; gap:0.5rem; align-items:center;">
+          <label style="margin-right:0.25rem;">Session</label>
+          <input type="date" id="attDate" style="width:auto;">
+          <button class="btn btn-secondary btn-sm" id="attAllPresent">Mark all present</button>
+        </div>
+      </div>
+      <p class="hint">Tap a player to toggle present / absent, then commit the session. Loads any existing record for the chosen date.</p>
+      <div class="att-list" id="attList"></div>
+      <button class="btn full-w" id="attSave">Commit Session Attendance</button>
+    </section>
+
+    <!-- CENTRAL REGISTRY -->
+    <section class="sams-card span-2" id="rosterCard">
+      <div class="card-header">
+        <h2 class="card-title">🗂️ Central System Registry</h2>
+        <div style="display:flex; gap:0.5rem;">
+          <button class="btn btn-secondary btn-sm" id="exportCsv">Export Tenant CSV</button>
+        </div>
+      </div>
+      <div style="overflow-x:auto;">
+        <table class="sams-table" id="rosterTable">
+          <thead>
+            <tr>
+              <th>Student Profile</th><th>Cohort</th><th>EID Compliance</th>
+              <th>Billing</th><th>Payment</th><th>Lifecycle</th><th>Key Metrics</th><th></th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- PARENT COMMS -->
+    <section class="sams-card span-2" id="commsCard">
+      <div class="card-header">
+        <h2 class="card-title">📱 Parent Communications Engine</h2>
+        <span class="card-sub">Automated Channel Formatter</span>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Target Family Unit</label>
+          <select id="commsPlayerSelect"><option value="">Select student...</option></select>
+        </div>
+        <div class="form-group">
+          <label>Communication Channel</label>
+          <select id="commsChannel">
+            <option value="WhatsApp">WhatsApp Outbound Message</option>
+            <option value="SMS">SMS Short Brief</option>
+            <option value="Email">Email Digest Notification</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-group mt">
+        <label>Generated Payload Output</label>
+        <textarea id="commsPayload" rows="7" style="font-family:monospace; font-size:0.85rem;" readonly></textarea>
+      </div>
+      <div style="display:flex; gap:0.75rem;">
+        <button class="btn" id="commsCopy">Copy Payload</button>
+        <button class="btn btn-secondary" id="commsWhatsApp">Open in WhatsApp Web</button>
+      </div>
+    </section>
+
+    <!-- BILLING & CHURN -->
+    <section class="sams-card span-2" id="analyticsCard">
+      <div class="card-header">
+        <h2 class="card-title">📊 Billing &amp; Churn Analytics</h2>
+        <span class="card-sub">Current tenant</span>
+      </div>
+      <div class="sams-grid">
+        <div>
+          <h3 style="font-size:0.95rem; margin-bottom:0.75rem;">Billing Mix</h3>
+          <div class="bars" id="billingBars"></div>
+          <h3 style="font-size:0.95rem; margin:1.25rem 0 0.75rem;">Payment Standing</h3>
+          <div class="bars" id="paymentBars"></div>
+        </div>
+        <div>
+          <h3 style="font-size:0.95rem; margin-bottom:0.75rem;">Exit Reason / Churn Tags</h3>
+          <div class="bars" id="churnBars"></div>
+          <h3 style="font-size:0.95rem; margin:1.25rem 0 0.75rem;">EID Compliance Watchlist</h3>
+          <div id="eidWatchlist" class="hint"></div>
+        </div>
+      </div>
+    </section>
+
+  </div>
+
+  <div class="toast" id="toast"></div>
+  <script type="module" src="/js/main.js"></script>
+</body>
+</html>
