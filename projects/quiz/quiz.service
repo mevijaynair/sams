@@ -1,0 +1,19 @@
+[Unit]
+Description=Annual Day Quiz — Multi-round team-based quiz with live scoring
+After=network.target
+PartOf=fmss.service
+
+[Service]
+Type=simple
+User=fmss
+WorkingDirectory=/opt/quiz
+ExecStart=/usr/bin/node server.js
+Restart=on-failure
+RestartSec=10
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=quiz
+Environment="PORT=3001"
+
+[Install]
+WantedBy=multi-user.target

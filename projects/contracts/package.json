@@ -1,0 +1,17 @@
+{
+  "name": "fmss-contracts",
+  "version": "1.0.0",
+  "type": "module",
+  "description": "Football contract & fee management system for FMSS",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node --watch server.js"
+  },
+  "keywords": ["contracts", "fee", "payment", "football"],
+  "author": "FMSS",
+  "license": "MIT",
+  "engines": {
+    "node": ">=24.0.0"
+  }
+}

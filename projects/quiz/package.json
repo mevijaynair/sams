@@ -1,0 +1,17 @@
+{
+  "name": "annual-day-quiz",
+  "version": "1.0.0",
+  "type": "module",
+  "description": "Multi-round team-based quiz for annual day events with live scoring",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node --watch server.js"
+  },
+  "keywords": ["quiz", "team", "leaderboard", "scoring"],
+  "author": "FMSS",
+  "license": "MIT",
+  "engines": {
+    "node": ">=24.0.0"
+  }
+}

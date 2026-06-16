@@ -1,8 +1,8 @@
-# Caddyfile — wearefmss.com with auto-HTTPS + subdomains for other projects
+# Caddyfile — fmss.ae with auto-HTTPS + subdomains for other projects
 # Requires: DNS A records pointing to the server IP, and Caddy installed + running as systemd service
 
 # SAMS — main Sports Academy Management System
-wearefmss.com {
+fmss.ae {
   log {
     output stdout
     format json
@@ -30,29 +30,50 @@ wearefmss.com {
 }
 
 # ========================================================================
-# Subdomains for your other projects (Football AI, FMSS, etc.)
-# Replace these with your actual project details.
+# Subdomains for your other projects
 # ========================================================================
 
-# Football AI — analysis & reporting tool
-footballai.wearefmss.com {
-  reverse_proxy localhost:3001  # update port as needed
+# Annual Day Quiz — team-based multi-round quiz with live scoring
+quiz.fmss.ae {
+  log {
+    output stdout
+    format json
+  }
+  reverse_proxy localhost:3001 {
+    header_up X-Forwarded-For {http.request.remote}
+    header_up X-Forwarded-Proto {http.request.scheme}
+    header_up X-Forwarded-Host {http.request.host}
+  }
   encode gzip
+  header / {
+    -Server
+    Strict-Transport-Security max-age=31536000
+    X-Content-Type-Options nosniff
+    X-Frame-Options SAMEORIGIN
+  }
 }
 
-# FMSS (Football Match Scheduling System) — tournament bracket system
-fmss.wearefmss.com {
-  reverse_proxy localhost:3002   # update port as needed
+# FMSS Contracts — football contract & fee management
+contracts.fmss.ae {
+  log {
+    output stdout
+    format json
+  }
+  reverse_proxy localhost:3002 {
+    header_up X-Forwarded-For {http.request.remote}
+    header_up X-Forwarded-Proto {http.request.scheme}
+    header_up X-Forwarded-Host {http.request.host}
+  }
   encode gzip
+  header / {
+    -Server
+    Strict-Transport-Security max-age=31536000
+    X-Content-Type-Options nosniff
+    X-Frame-Options SAMEORIGIN
+  }
 }
 
-# Admin dashboard (optional)
-admin.wearefmss.com {
-  reverse_proxy localhost:3003   # update port as needed
-  encode gzip
-}
-
-# Redirect www.wearefmss.com → wearefmss.com (clean URLs)
-www.wearefmss.com {
-  redir https://wearefmss.com{uri} permanent
+# Redirect www.fmss.ae → fmss.ae (clean URLs)
+www.fmss.ae {
+  redir https://fmss.ae{uri} permanent
 }

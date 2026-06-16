@@ -1,0 +1,19 @@
+[Unit]
+Description=FMSS Contracts — Football contract & fee management
+After=network.target
+PartOf=fmss.service
+
+[Service]
+Type=simple
+User=fmss
+WorkingDirectory=/opt/fmss-contracts
+ExecStart=/usr/bin/node server.js
+Restart=on-failure
+RestartSec=10
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=contracts
+Environment="PORT=3002"
+
+[Install]
+WantedBy=multi-user.target
