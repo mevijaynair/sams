@@ -1,10 +1,11 @@
-// roster.js — central multi-sport registry table with edit/delete (gated) + CSV export.
+// roster.js — central enrolment registry (Students view): enrolment + compliance
+// columns, single-sport academies hide the Sport column. Performance metrics live
+// in the Performance view's matrix, not here.
 import { api } from '../api.js';
 import { store, toast } from '../store.js';
 import { esc, isEidExpired } from '../util.js';
 import { reloadStudents } from '../data.js';
 import { editStudent } from './admin.js';
-import { buildRegistryTable } from './sportRegistry.js';
 
 const $ = (id) => document.getElementById(id);
 const PLAN_LABELS = { monthly: 'Monthly', per_session: 'Per session', package: 'Package' };
@@ -15,57 +16,46 @@ function planCell(s) {
   return `AED ${s.fee_rate}/mo`;
 }
 
-function render() {
-  const table = $('rosterTable');
-  const thead = table?.querySelector('thead');
-  const tbody = table?.querySelector('tbody');
-  const canWrite = store.can('students:write');
+function eidCell(s) {
+  if (!s.eid_number) return '<span class="hint">—</span>';
+  const expired = isEidExpired(s.eid_expiry);
+  const flag = expired ? ' <span class="tag tag-overdue">expired</span>' : '';
+  return `${esc(s.eid_number)}${flag}`;
+}
 
+function render() {
+  const tbody = $('rosterTable')?.querySelector('tbody');
   if (!tbody) return;
+  const canWrite = store.can('students:write');
 
   if (!store.students.length) {
     tbody.innerHTML = '<tr><td colspan="8" class="hint">No students for this view.</td></tr>';
     return;
   }
 
-  // For multi-sport: enrich with sport_id and metrics_payload
-  const records = store.students.map(s => ({
-    ...s,
-    sport_id: s.sport?.toLowerCase().replace(/\s+/g, '_'),
-    age_tier_id: s.age_group,
-    age_tier_name: s.age_group,
-    metrics_payload: s.metrics_payload || {}
-  }));
-
-  // Build using sportRegistry (single-sport academies hide sport column)
-  const isSingleSport = store.tenantSports && store.tenantSports.length === 1;
-  const html = buildRegistryTable(records, {
-    onEdit: editStudent,
-    showActions: canWrite,
-    isSingleSport
-  });
-
-  // Extract just the table HTML
-  const tempDiv = document.createElement('div');
-  tempDiv.innerHTML = html;
-  const newTable = tempDiv.querySelector('table');
-  const newTheadHtml = newTable.querySelector('thead').innerHTML;
-  const newTbodyHtml = newTable.querySelector('tbody').innerHTML;
-
-  // Update headers if sport mix changed (dynamic columns)
-  if(thead) thead.innerHTML = newTheadHtml;
-  if(tbody) tbody.innerHTML = newTbodyHtml;
-
-  // Re-attach event listeners
-  document.querySelectorAll('[data-edit]').forEach(btn => {
-    btn.addEventListener('click', (e) => editStudent(e.target.dataset.edit));
-  });
+  tbody.innerHTML = store.students.map(s => {
+    const payStatus = (s.payment_status || 'Due').toLowerCase();
+    const acct = (s.account_status || 'Active');
+    const acctTag = acct === 'Active' ? 'tag-active' : 'tag-exited';
+    return `<tr>
+      <td style="font-weight:600;">${esc(s.name)}</td>
+      <td class="sport-scoped"><span class="tag">${esc(s.sport)}</span></td>
+      <td>${esc(s.age_group || '—')}</td>
+      <td style="font-size:0.82rem;">${eidCell(s)}</td>
+      <td>${esc(planCell(s))}</td>
+      <td><span class="tag tag-${esc(payStatus)}">${esc(s.payment_status || 'Due')}</span></td>
+      <td><span class="tag ${acctTag}">${esc(acct)}</span></td>
+      <td style="white-space:nowrap; text-align:right;">${canWrite ? `
+        <button class="btn btn-secondary btn-sm" data-edit="${s.id}">Edit</button>
+        <button class="btn btn-danger btn-sm" data-del="${s.id}">✕</button>` : ''}</td>
+    </tr>`;
+  }).join('');
 }
 
 export function initRoster() {
   $('rosterTable').addEventListener('click', async (e) => {
-    const editId = e.target.dataset.edit;
-    const delId = e.target.dataset.del;
+    const editId = e.target.closest('[data-edit]')?.dataset.edit;
+    const delId = e.target.closest('[data-del]')?.dataset.del;
     if (editId) return editStudent(editId);
     if (delId) {
       const s = store.getStudent(delId);

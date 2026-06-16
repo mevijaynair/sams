@@ -110,6 +110,7 @@ export const api = {
   deleteStudent: (id) => req('DELETE', `/students/${id}`),
 
   evaluations: (sid) => req('GET', `/evaluations/${sid}`),
+  latestEvaluations: () => req('GET', '/evaluations'),
   saveEvaluation: (sid, metrics) => req('POST', `/evaluations/${sid}`, { metrics }),
 
   attendanceForDate: (date) => req('GET', `/attendance/${date}`),

@@ -4,6 +4,11 @@ import * as Evals from '../repos/evaluations.js';
 
 const router = Router();
 
+// Latest evaluation per student for the whole tenant (Squad Matrix).
+router.get('/', (req, res) => {
+  res.json(Evals.latestForTenant(req.tenantId));
+});
+
 router.get('/:studentId', (req, res) => {
   res.json(Evals.listForStudent(req.tenantId, req.params.studentId));
 });

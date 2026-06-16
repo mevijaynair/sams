@@ -344,6 +344,32 @@ input:focus, select:focus, textarea:focus { border-color: var(--sport); outline:
 .bar-row { display: grid; grid-template-columns: 140px 1fr 36px; align-items: center; gap: 0.6rem; font-size: 0.82rem; }
 .bar-track { display: block; background: var(--bg-subtle); border-radius: 9999px; height: 9px; overflow: hidden; }
 .bar-fill { display: block; height: 100%; background: var(--sport-grad); border-radius: 9999px; transition: width 0.4s ease; }
+.bar-fill.inverse { background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); }
+
+/* ===== Performance: stat summary + squad matrix ===== */
+.metric-cat, .stat-cat { margin-bottom: 1.1rem; }
+.metric-cat:last-child, .stat-cat:last-child { margin-bottom: 0; }
+.metric-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+@media (max-width: 560px) { .metric-grid { grid-template-columns: 1fr; } }
+
+.input-unit { display: flex; align-items: center; gap: 0.5rem; }
+.input-unit .unit { color: var(--text-faint); font-size: 0.8rem; white-space: nowrap; }
+
+.stat-row { display: grid; grid-template-columns: 150px 1fr auto; align-items: center; gap: 0.7rem;
+  padding: 0.32rem 0; }
+.stat-label { font-size: 0.84rem; color: var(--text-muted); }
+.stat-val { font-size: 0.84rem; font-weight: 600; text-align: right; white-space: nowrap; }
+.trend { font-size: 0.72rem; font-weight: 700; margin-left: 0.3rem; }
+.trend.up { color: var(--success); }
+.trend.down { color: var(--danger); }
+@media (max-width: 560px) { .stat-row { grid-template-columns: 110px 1fr auto; gap: 0.5rem; } }
+
+.matrix-table th.matrix-sort { cursor: pointer; user-select: none; white-space: nowrap; }
+.matrix-table th.matrix-sort:hover { color: var(--sport-on-soft); }
+.matrix-table tbody tr { cursor: pointer; }
+.metric-cell { display: flex; flex-direction: column; gap: 0.25rem; min-width: 84px; }
+.metric-cell .metric-val { font-size: 0.82rem; font-weight: 600; }
+.bar-track.mini { height: 5px; }
 
 .toast { position: fixed; bottom: 1.5rem; right: 1.5rem; background: var(--toast-bg);
   color: #fff; padding: 0.75rem 1.15rem; border-radius: 10px; font-size: 0.85rem;

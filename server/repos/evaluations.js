@@ -17,6 +17,17 @@ export function latest(tenantId, studentId) {
   return row ? parse(row) : null;
 }
 
+// Latest evaluation per student across the whole tenant (powers the matrix).
+export function latestForTenant(tenantId) {
+  return db.prepare(
+    `SELECT e.id, e.student_id, e.recorded_at, e.metrics FROM evaluations e
+     WHERE e.tenant_id = ?
+       AND e.recorded_at = (
+         SELECT MAX(recorded_at) FROM evaluations
+         WHERE tenant_id = e.tenant_id AND student_id = e.student_id)`
+  ).all(tenantId).map(parse);
+}
+
 export function create(tenantId, studentId, metrics) {
   // Guard: the student must belong to this tenant.
   const owns = db.prepare(

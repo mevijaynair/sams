@@ -142,7 +142,6 @@
                     <option value="Exited">Exited Academy</option>
                   </select></div>
               </div>
-              <div id="dynamicMetricsSection" class="form-row mt" style="display:none;"></div>
               <div class="form-row mt">
                 <div class="form-group"><label>Emirates ID (EID)</label>
                   <input type="text" id="f_eidNumber" placeholder="784-YYYY-XXXXXXX-Z"></div>
@@ -226,15 +225,25 @@
 
         <!-- PERFORMANCE -->
         <section class="view" data-view="performance" hidden>
+          <!-- Squad-wide comparison matrix (columns adapt to the sport) -->
           <div class="sams-card">
-            <div class="card-header"><h3 class="card-title">Pitch Performance</h3>
-              <span class="card-sub">Sport-specific evaluation matrix</span></div>
+            <div class="card-header"><h3 class="card-title">Squad Performance Matrix</h3>
+              <span class="card-sub">Latest evaluation · key metrics</span></div>
+            <div id="perfMatrixSportRow" class="form-group" style="max-width:240px;" hidden>
+              <label>Sport</label><select id="perfMatrixSport"></select>
+            </div>
+            <div style="overflow-x:auto;" id="perfMatrix"></div>
+            <p class="hint">Click a metric header to sort, or a row to evaluate that player.</p>
+          </div>
+
+          <!-- Single-player evaluation: stat summary + category-grouped entry -->
+          <div class="sams-card" id="perfEvalCard">
+            <div class="card-header"><h3 class="card-title">Player Evaluation</h3>
+              <span class="card-sub" id="perfHistory"></span></div>
             <div class="form-group"><label>Active Player</label>
               <select id="perfPlayerSelect"><option value="">Select a player to evaluate...</option></select></div>
-            <div id="dynamicMetricContainer" style="display:flex; flex-direction:column; gap:1rem;">
-              <p class="muted">Select a player to load their sport's scoring profile.</p>
-            </div>
-            <div id="perfHistory" class="hint"></div>
+            <div id="perfSummary"><p class="hint">Select a player to view their performance profile.</p></div>
+            <div id="perfInputs"></div>
             <button class="btn full-w" id="perfSave" data-perm="performance:write">Save Evaluation Log</button>
           </div>
         </section>
