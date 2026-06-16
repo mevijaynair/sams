@@ -13,6 +13,7 @@ import { initSettings, loadTenants } from './modules/settings.js';
 import { initParents } from './modules/parents.js';
 import { initAudit } from './modules/audit.js';
 import { sportIcon, sportKey, allSportClasses, fieldPattern } from './graphics.js';
+import { initTheme } from './theme.js';
 
 const $ = (id) => document.getElementById(id);
 
@@ -199,6 +200,7 @@ async function doLogin(email, password) {
 
 // ---- start ----
 async function start() {
+  initTheme();   // wire the dark/light toggle + apply saved preference
   wireAuth();
   if (store.token) {
     try {
