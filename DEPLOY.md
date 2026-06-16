@@ -54,8 +54,8 @@ apt install -y git
 # As the sams user
 su - sams
 
-# Clone the repository (adjust URL)
-git clone https://github.com/your-org/SAMS.git /opt/sams
+# Clone the repository
+git clone https://github.com/mevijaynair/sams.git /opt/sams
 cd /opt/sams
 
 # Install dependencies
@@ -269,7 +269,8 @@ The Caddyfile is already configured with reverse proxies for all subdomains. Dep
 **Steps:**
 ```bash
 # Clone your FMSS club repo to /opt/fmss-club
-git clone <your-club-repo> /opt/fmss-club
+# (Replace <your-club-repo-url> with the actual repo URL from your other project)
+git clone <your-club-repo-url> /opt/fmss-club
 cd /opt/fmss-club
 
 # Install & configure
@@ -330,7 +331,8 @@ sudo systemctl enable quiz
 **Steps:**
 ```bash
 # Clone your contracts app repo to /opt/fmss-contracts
-git clone <your-contracts-repo> /opt/fmss-contracts
+# (Replace <your-contracts-repo-url> with the actual repo URL from your other project)
+git clone <your-contracts-repo-url> /opt/fmss-contracts
 cd /opt/fmss-contracts
 
 # Install & configure
