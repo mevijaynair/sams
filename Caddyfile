@@ -1,0 +1,58 @@
+# Caddyfile — wearefmss.com with auto-HTTPS + subdomains for other projects
+# Requires: DNS A records pointing to the server IP, and Caddy installed + running as systemd service
+
+# SAMS — main Sports Academy Management System
+wearefmss.com {
+  log {
+    output stdout
+    format json
+  }
+
+  # Reverse proxy to the Node.js app running on localhost:3000
+  reverse_proxy localhost:3000 {
+    # Headers for secure cookies (if app doesn't set them)
+    header_up X-Forwarded-For {http.request.remote}
+    header_up X-Forwarded-Proto {http.request.scheme}
+    header_up X-Forwarded-Host {http.request.host}
+  }
+
+  # Compression for JSON, HTML, CSS, JS
+  encode gzip
+
+  # Security headers
+  header / {
+    -Server
+    Strict-Transport-Security max-age=31536000
+    X-Content-Type-Options nosniff
+    X-Frame-Options SAMEORIGIN
+    X-XSS-Protection "1; mode=block"
+  }
+}
+
+# ========================================================================
+# Subdomains for your other projects (Football AI, FMSS, etc.)
+# Replace these with your actual project details.
+# ========================================================================
+
+# Football AI — analysis & reporting tool
+footballai.wearefmss.com {
+  reverse_proxy localhost:3001  # update port as needed
+  encode gzip
+}
+
+# FMSS (Football Match Scheduling System) — tournament bracket system
+fmss.wearefmss.com {
+  reverse_proxy localhost:3002   # update port as needed
+  encode gzip
+}
+
+# Admin dashboard (optional)
+admin.wearefmss.com {
+  reverse_proxy localhost:3003   # update port as needed
+  encode gzip
+}
+
+# Redirect www.wearefmss.com → wearefmss.com (clean URLs)
+www.wearefmss.com {
+  redir https://wearefmss.com{uri} permanent
+}

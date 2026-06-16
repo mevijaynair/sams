@@ -1,6 +1,7 @@
 // routes/index.js — mounts the API. Auth + tenant + permission gating live here.
 import { Router } from 'express';
 import auth from './auth.js';
+import passwordReset from './passwordReset.js';
 import students from './students.js';
 import evaluations from './evaluations.js';
 import attendance from './attendance.js';
@@ -15,8 +16,9 @@ import { requireAuth, resolveTenant, requirePerm } from '../middleware.js';
 
 const router = Router();
 
-// --- public ---
+// --- public (no auth required) ---
 router.use('/auth', auth);
+router.use('/auth', passwordReset);  // forgot-password, reset-password, invite-accept
 
 // --- authenticated, but NOT tenant-resolved (the tenant chooser lives here) ---
 router.use(requireAuth);

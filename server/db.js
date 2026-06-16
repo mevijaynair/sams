@@ -148,6 +148,11 @@ export function seed() {
     console.log('Seed skipped — data already exists.');
     return;
   }
+  // In production, don't auto-seed demo accounts. Admins must create real accounts via the UI.
+  if (process.env.NODE_ENV === 'production') {
+    console.log('Production mode: skipping demo data seed.');
+    return;
+  }
   const now = new Date().toISOString();
 
   // Academies are sport-specific. Two single-sport academies (the common case)

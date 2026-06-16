@@ -1,4 +1,6 @@
 // index.js — Express entry point. Serves the API and the static frontend.
+// Environment variables (NODE_ENV, JWT_SECRET, etc.) are loaded via .env file
+// on the server (systemd EnvironmentFile directive) or set manually before npm start.
 import express from 'express';
 import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
