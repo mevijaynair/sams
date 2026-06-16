@@ -4,7 +4,7 @@ export const Validators = {
   // Student schema
   student: {
     name: (v) => typeof v === 'string' && v.trim().length > 0 ? null : 'Name is required',
-    age_group: (v) => ['U6', 'U8', 'U10', 'U12', 'U14', 'U16', 'U18'].includes(v) ? null : 'Invalid age group',
+    age_group: (v) => ['U6-U9', 'U10-U13', 'U14-U18'].includes(v) ? null : 'Invalid age group',
     sport: (v) => typeof v === 'string' && v.trim().length > 0 ? null : 'Sport is required',
     fee_plan_type: (v) => ['monthly', 'per_session', 'package'].includes(v) ? null : 'Invalid fee plan type',
     fee_rate: (v) => typeof v === 'number' && v >= 0 ? null : 'Fee rate must be non-negative',
