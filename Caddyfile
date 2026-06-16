@@ -1,25 +1,26 @@
-# Caddyfile — fmss.ae with auto-HTTPS + subdomains for other projects
-# Requires: DNS A records pointing to the server IP, and Caddy installed + running as systemd service
+# Caddyfile — fmss.ae architecture
+# fmss.ae = FMSS Football Club (main site)
+# sams.fmss.ae, quiz.fmss.ae, contracts.fmss.ae = specialized subdomains
 
-# SAMS — main Sports Academy Management System
+# ========================================================================
+# FMSS Football Club — main public/admin site for the club
+# ========================================================================
 fmss.ae {
   log {
     output stdout
     format json
   }
 
-  # Reverse proxy to the Node.js app running on localhost:3000
-  reverse_proxy localhost:3000 {
-    # Headers for secure cookies (if app doesn't set them)
+  # Reverse proxy to your FMSS club app (from your other chat)
+  # Update port 8000 to wherever your club site runs
+  reverse_proxy localhost:8000 {
     header_up X-Forwarded-For {http.request.remote}
     header_up X-Forwarded-Proto {http.request.scheme}
     header_up X-Forwarded-Host {http.request.host}
   }
 
-  # Compression for JSON, HTML, CSS, JS
   encode gzip
 
-  # Security headers
   header / {
     -Server
     Strict-Transport-Security max-age=31536000
@@ -30,8 +31,32 @@ fmss.ae {
 }
 
 # ========================================================================
-# Subdomains for your other projects
+# Subdomains — specialized tools
 # ========================================================================
+
+# SAMS — Sports Academy Management System (for team/academy management)
+sams.fmss.ae {
+  log {
+    output stdout
+    format json
+  }
+
+  reverse_proxy localhost:3000 {
+    header_up X-Forwarded-For {http.request.remote}
+    header_up X-Forwarded-Proto {http.request.scheme}
+    header_up X-Forwarded-Host {http.request.host}
+  }
+
+  encode gzip
+
+  header / {
+    -Server
+    Strict-Transport-Security max-age=31536000
+    X-Content-Type-Options nosniff
+    X-Frame-Options SAMEORIGIN
+    X-XSS-Protection "1; mode=block"
+  }
+}
 
 # Annual Day Quiz — team-based multi-round quiz with live scoring
 quiz.fmss.ae {
@@ -39,12 +64,15 @@ quiz.fmss.ae {
     output stdout
     format json
   }
+
   reverse_proxy localhost:3001 {
     header_up X-Forwarded-For {http.request.remote}
     header_up X-Forwarded-Proto {http.request.scheme}
     header_up X-Forwarded-Host {http.request.host}
   }
+
   encode gzip
+
   header / {
     -Server
     Strict-Transport-Security max-age=31536000
@@ -59,12 +87,15 @@ contracts.fmss.ae {
     output stdout
     format json
   }
+
   reverse_proxy localhost:3002 {
     header_up X-Forwarded-For {http.request.remote}
     header_up X-Forwarded-Proto {http.request.scheme}
     header_up X-Forwarded-Host {http.request.host}
   }
+
   encode gzip
+
   header / {
     -Server
     Strict-Transport-Security max-age=31536000

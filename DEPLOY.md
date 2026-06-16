@@ -1,12 +1,13 @@
-# SAMS & Multi-Project Deployment — fmss.ae
+# FMSS Multi-Project Deployment — fmss.ae
 
-This guide covers deploying **SAMS** (Sports Academy Management) to **fmss.ae** with two additional projects as subdomains:
+This guide covers deploying your **FMSS Football Club ecosystem** to **fmss.ae** with specialized subdomains:
 
-- **fmss.ae** → SAMS (main academy management)
+- **fmss.ae** → FMSS Football Club site (main public/admin site)
+- **sams.fmss.ae** → SAMS (Sports Academy Management — for team/academy management)
 - **quiz.fmss.ae** → Annual Day Quiz (team-based multi-round quiz with live scoring)
 - **contracts.fmss.ae** → FMSS Contracts (football contract & fee management)
 
-**Timeline:** ~45 minutes (SAMS + both subdomains; DNS propagation: 24–48 hours)
+**Timeline:** ~1 hour (all four apps; DNS propagation: 24–48 hours)
 
 ---
 
@@ -144,10 +145,11 @@ Update your domain registrar (fmss.ae) with:
 
 ```
 Type    Name              Value
-A       @                 <your-server-ip>          (main SAMS app)
+A       @                 <your-server-ip>          (FMSS Football Club site)
 A       www               <your-server-ip>          (redirects to fmss.ae)
+A       sams              <your-server-ip>          (SAMS — team/academy management)
 A       quiz              <your-server-ip>          (Annual Day Quiz)
-A       contracts         <your-server-ip>          (Football Contracts)
+A       contracts         <your-server-ip>          (FMSS Contracts — fee management)
 CNAME   *.fmss.ae         fmss.ae                   (wildcard for future subdomains)
 ```
 
@@ -155,9 +157,10 @@ Also add Resend's DNS records for email verification (Resend shows them in the d
 
 **Verify DNS is live:**
 ```bash
-dig fmss.ae              # should show your server IP
-dig quiz.fmss.ae        # should resolve via wildcard
-dig contracts.fmss.ae   # should resolve via wildcard
+dig fmss.ae             # should show your server IP (club site)
+dig sams.fmss.ae       # should resolve via wildcard
+dig quiz.fmss.ae       # should resolve via wildcard
+dig contracts.fmss.ae  # should resolve via wildcard
 ```
 
 ---
@@ -212,17 +215,30 @@ sudo journalctl -u sams -f  # watch logs
 ## Step 9: Test the Deployment
 
 ```bash
-# Wait for DNS to propagate (~5–30 minutes; check with `dig fmss.ae`)
+# Wait for DNS to propagate (~5–30 minutes; check with `dig sams.fmss.ae`)
 
-# Open a browser and go to https://fmss.ae
-# You should see the SAMS login page (HTTPS with a valid certificate)
+# Open a browser and test all apps:
 
-# Log in with the super-admin account:
+# 1. FMSS Football Club (main site)
+https://fmss.ae
+# Should load your FMSS club site (from your other chat)
+
+# 2. SAMS (team/academy management)
+https://sams.fmss.ae
+# Should show the SAMS login page (HTTPS with a valid certificate)
+# Log in with super-admin:
 # Email: admin@fmss.ae (or the email you set in the DB)
 # Password: TempPassword123!
-
 # On first login, click "Forgot password?" to reset to a strong password
 # Check your email (Resend) for the reset link
+
+# 3. Quiz (Annual Day)
+https://quiz.fmss.ae
+# Should load the quiz API (JSON response from /api/health)
+
+# 4. Contracts (Fee Management)
+https://contracts.fmss.ae
+# Should load the contracts API (JSON response from /api/health)
 ```
 
 ---
@@ -239,11 +255,41 @@ sudo journalctl -u sams -f  # watch logs
 
 ---
 
-## Step 10: Deploy Your Other Projects (quiz.fmss.ae & contracts.fmss.ae)
+## Step 10: Deploy Your Other Projects
 
-The Caddyfile is already configured with reverse proxies for two subdomains. You need to:
+The Caddyfile is already configured with reverse proxies for all subdomains. Deploy in this order:
 
-### 10a: Deploy the Annual Day Quiz (quiz.fmss.ae)
+### 10a: Deploy FMSS Football Club Site (fmss.ae — main domain)
+
+**Architecture:**
+- Your club's main public-facing site (from your other chat)
+- React/Vue dashboard for club management, events, news, etc.
+- Can integrate with SAMS for team data
+
+**Steps:**
+```bash
+# Clone your FMSS club repo to /opt/fmss-club
+git clone <your-club-repo> /opt/fmss-club
+cd /opt/fmss-club
+
+# Install & configure
+npm install
+cp .env.example .env
+nano .env  # set PORT=8000 (or your configured port)
+
+# Create a systemd service (or use your existing one)
+# PORT=8000 (Caddy routes fmss.ae → localhost:8000)
+
+sudo systemctl start fmss-club
+sudo systemctl enable fmss-club
+```
+
+**Caddyfile:** Already configured to reverse-proxy `fmss.ae → localhost:8000`  
+(Update the port in Caddyfile if your club app uses a different port)
+
+---
+
+### 10b: Deploy the Annual Day Quiz (quiz.fmss.ae)
 
 **Architecture:**
 - Frontend: React/Vue (or vanilla JS if lightweight)
@@ -271,7 +317,9 @@ sudo systemctl enable quiz
 
 **Caddyfile:** Already configured to reverse-proxy `quiz.fmss.ae → localhost:3001`
 
-### 10b: Deploy FMSS Contracts (contracts.fmss.ae)
+---
+
+### 10c: Deploy FMSS Contracts (contracts.fmss.ae)
 
 **Architecture:**
 - Frontend: React/Vue dashboard for contract management
@@ -299,18 +347,22 @@ sudo systemctl enable fmss-contracts
 
 **Caddyfile:** Already configured to reverse-proxy `contracts.fmss.ae → localhost:3002`
 
-### 10c: Verify All Three Apps
+---
+
+### 10d: Verify All Four Apps
 
 ```bash
 # Open in browser:
-https://fmss.ae              # SAMS (should load)
+https://fmss.ae              # FMSS Club site (should load)
+https://sams.fmss.ae        # SAMS (should load)
 https://quiz.fmss.ae        # Annual Day Quiz (should load)
 https://contracts.fmss.ae   # Contracts app (should load)
 
 # Check logs:
-sudo journalctl -u sams -f
-sudo journalctl -u quiz -f
-sudo journalctl -u fmss-contracts -f
+sudo journalctl -u fmss-club -f        # Club site
+sudo journalctl -u sams -f             # SAMS
+sudo journalctl -u quiz -f             # Quiz
+sudo journalctl -u fmss-contracts -f   # Contracts
 
 # Verify Caddy routing:
 sudo tail -f /var/log/caddy/access.log
