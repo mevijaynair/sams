@@ -77,4 +77,20 @@ router.get('/me', requireAuth, (req, res) => {
   res.json({ user: publicUser(u) });
 });
 
+// Dev-only endpoint: fetch dev accounts (NEVER expose in production)
+router.get('/dev-accounts', (req, res) => {
+  if (process.env.NODE_ENV === 'production') {
+    return res.status(404).json({ error: 'Not found' });
+  }
+  // Return only labels and emails (no passwords) — passwords are entered/auto-filled by the client
+  const accounts = [
+    { email: 'super@sams.dev', label: 'Super Admin (all academies)' },
+    { email: 'admin@apex.dev', label: 'Admin · Apex Football (single-sport)' },
+    { email: 'football@apex.dev', label: 'Coach · Football' },
+    { email: 'admin@royal.dev', label: 'Admin · Royal Cricket (single-sport)' },
+    { email: 'admin@skyline.dev', label: 'Admin · Skyline (multi-sport)' }
+  ];
+  res.json({ accounts });
+});
+
 export default router;

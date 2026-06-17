@@ -17,13 +17,17 @@ import { initTheme } from './theme.js';
 
 const $ = (id) => document.getElementById(id);
 
-const DEV_ACCOUNTS = [
-  { email: 'super@sams.dev', password: 'super123', label: 'Super Admin (all academies)' },
-  { email: 'admin@apex.dev', password: 'admin123', label: 'Admin · Apex Football (single-sport)' },
-  { email: 'football@apex.dev', password: 'coach123', label: 'Coach · Football' },
-  { email: 'admin@royal.dev', password: 'admin123', label: 'Admin · Royal Cricket (single-sport)' },
-  { email: 'admin@skyline.dev', password: 'admin123', label: 'Admin · Skyline (multi-sport)' }
-];
+// Dev passwords are stored only in memory, never in localStorage or exposed to the network
+// Server endpoint /api/auth/dev-accounts returns only emails/labels (no passwords)
+const DEV_PASSWORDS = {
+  'super@sams.dev': 'super123',
+  'admin@apex.dev': 'admin123',
+  'football@apex.dev': 'coach123',
+  'admin@royal.dev': 'admin123',
+  'admin@skyline.dev': 'admin123'
+};
+
+let DEV_ACCOUNTS = []; // populated at runtime from server
 
 let modulesReady = false;
 
@@ -143,14 +147,26 @@ async function refreshActiveData() {
 }
 
 // ---- wiring ----
-function wireAuth() {
+async function wireAuth() {
+  // Fetch dev accounts from server (development-only endpoint)
+  try {
+    const res = await fetch('/api/auth/dev-accounts');
+    if (res.ok) {
+      const { accounts } = await res.json();
+      DEV_ACCOUNTS = accounts;
+    }
+  } catch { /* if endpoint not available, dev panel remains empty */ }
+
+  // Populate dev quick-login buttons (empty if not in dev mode or fetch failed)
   $('quickLogin').innerHTML = DEV_ACCOUNTS.map((a, i) =>
     `<button class="btn btn-secondary btn-sm" data-i="${i}">${a.label}</button>`).join('');
   $('quickLogin').querySelectorAll('button').forEach(b =>
     b.addEventListener('click', () => {
       const a = DEV_ACCOUNTS[b.dataset.i];
-      $('loginEmail').value = a.email; $('loginPassword').value = a.password;
-      doLogin(a.email, a.password);
+      const pwd = DEV_PASSWORDS[a.email] || '';
+      $('loginEmail').value = a.email;
+      $('loginPassword').value = pwd;
+      doLogin(a.email, pwd);
     }));
 
   $('loginForm').addEventListener('submit', (e) => {
@@ -201,7 +217,7 @@ async function doLogin(email, password) {
 // ---- start ----
 async function start() {
   initTheme();   // wire the dark/light toggle + apply saved preference
-  wireAuth();
+  await wireAuth();  // fetch dev accounts from server (dev mode only)
   if (store.token) {
     try {
       const { user } = await api.me();   // resume an existing session
