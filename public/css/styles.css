@@ -106,7 +106,8 @@ body.single-sport .sport-scoped { display: none !important; }
 .login-sub { color: var(--text-muted); font-size: 0.86rem; margin-bottom: 1.85rem; }
 .login-form { display: flex; flex-direction: column; gap: 1rem; }
 .login-error { color: var(--danger); font-size: 0.82rem; min-height: 1rem; }
-.dev-panel { margin-top: 1.75rem; padding-top: 1.25rem; border-top: 1px dashed var(--border-strong); }
+.dev-panel { display: none; margin-top: 1.75rem; padding-top: 1.25rem; border-top: 1px dashed var(--border-strong);
+  opacity: 0.7; }
 .dev-panel-head { font-size: 0.68rem; letter-spacing: 0.08em; text-transform: uppercase;
   color: var(--text-faint); margin-bottom: 0.6rem; }
 .dev-buttons { display: flex; flex-direction: column; gap: 0.4rem; }

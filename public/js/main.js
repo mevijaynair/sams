@@ -17,17 +17,8 @@ import { initTheme } from './theme.js';
 
 const $ = (id) => document.getElementById(id);
 
-// Dev passwords are stored only in memory, never in localStorage or exposed to the network
-// Server endpoint /api/auth/dev-accounts returns only emails/labels (no passwords)
-const DEV_PASSWORDS = {
-  'super@sams.dev': 'super123',
-  'admin@apex.dev': 'admin123',
-  'football@apex.dev': 'coach123',
-  'admin@royal.dev': 'admin123',
-  'admin@skyline.dev': 'admin123'
-};
-
-let DEV_ACCOUNTS = []; // populated at runtime from server
+let DEV_ACCOUNTS = []; // populated at runtime from server (dev mode only)
+let DEV_MODE_VISIBLE = false; // dev panel visibility toggle
 
 let modulesReady = false;
 
@@ -154,20 +145,49 @@ async function wireAuth() {
     if (res.ok) {
       const { accounts } = await res.json();
       DEV_ACCOUNTS = accounts;
+      // Hide dev panel by default; show only if visible toggle is on
+      $('quickLogin').innerHTML = DEV_ACCOUNTS.map((a, i) =>
+        `<button class="btn btn-secondary btn-sm" data-i="${i}">${a.label}</button>`).join('');
+      updateDevPanelVisibility();
+      // Attach dev-login handlers
+      $('quickLogin').querySelectorAll('button').forEach(b =>
+        b.addEventListener('click', async () => {
+          const a = DEV_ACCOUNTS[b.dataset.i];
+          try {
+            const res = await fetch('/api/auth/dev-login', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ email: a.email })
+            });
+            if (res.ok) {
+              const { accessToken, user } = await res.json();
+              store.setToken(accessToken);
+              await enterApp(user);
+            } else {
+              toast('Dev login failed', 'error');
+            }
+          } catch (e) {
+            toast('Dev login error: ' + e.message, 'error');
+          }
+        }));
     }
-  } catch { /* if endpoint not available, dev panel remains empty */ }
+  } catch { /* dev not available */ }
 
-  // Populate dev quick-login buttons (empty if not in dev mode or fetch failed)
-  $('quickLogin').innerHTML = DEV_ACCOUNTS.map((a, i) =>
-    `<button class="btn btn-secondary btn-sm" data-i="${i}">${a.label}</button>`).join('');
-  $('quickLogin').querySelectorAll('button').forEach(b =>
-    b.addEventListener('click', () => {
-      const a = DEV_ACCOUNTS[b.dataset.i];
-      const pwd = DEV_PASSWORDS[a.email] || '';
-      $('loginEmail').value = a.email;
-      $('loginPassword').value = pwd;
-      doLogin(a.email, pwd);
-    }));
+  // Keyboard shortcut to toggle dev panel visibility: Ctrl+Shift+D
+  document.addEventListener('keydown', (e) => {
+    if (e.ctrlKey && e.shiftKey && e.key === 'D') {
+      DEV_MODE_VISIBLE = !DEV_MODE_VISIBLE;
+      updateDevPanelVisibility();
+      e.preventDefault();
+    }
+  });
+
+  function updateDevPanelVisibility() {
+    const panel = document.querySelector('.dev-panel');
+    if (panel) {
+      panel.style.display = DEV_MODE_VISIBLE && DEV_ACCOUNTS.length > 0 ? 'block' : 'none';
+    }
+  }
 
   $('loginForm').addEventListener('submit', (e) => {
     e.preventDefault();

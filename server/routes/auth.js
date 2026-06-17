@@ -82,7 +82,7 @@ router.get('/dev-accounts', (req, res) => {
   if (process.env.NODE_ENV === 'production') {
     return res.status(404).json({ error: 'Not found' });
   }
-  // Return only labels and emails (no passwords) — passwords are entered/auto-filled by the client
+  // Return only labels and emails (no passwords)
   const accounts = [
     { email: 'super@sams.dev', label: 'Super Admin (all academies)' },
     { email: 'admin@apex.dev', label: 'Admin · Apex Football (single-sport)' },
@@ -91,6 +91,38 @@ router.get('/dev-accounts', (req, res) => {
     { email: 'admin@skyline.dev', label: 'Admin · Skyline (multi-sport)' }
   ];
   res.json({ accounts });
+});
+
+// Dev-only auto-login endpoint: logs in to a dev account without password
+// Only available in development mode; production returns 404
+router.post('/dev-login', (req, res) => {
+  if (process.env.NODE_ENV === 'production') {
+    return res.status(404).json({ error: 'Not found' });
+  }
+
+  const { email } = req.body || {};
+  const validEmails = ['super@sams.dev', 'admin@apex.dev', 'football@apex.dev', 'admin@royal.dev', 'admin@skyline.dev'];
+
+  if (!validEmails.includes(email)) {
+    return res.status(400).json({ error: 'Invalid dev account' });
+  }
+
+  const u = Users.findByEmail(email);
+  if (!u || !u.active) {
+    return res.status(401).json({ error: 'Dev account not found or inactive' });
+  }
+
+  const accessToken = createAccessToken(u.id);
+  const refreshToken = createRefreshToken(u.id);
+
+  res.cookie('refreshToken', refreshToken, {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === 'production',
+    sameSite: 'Strict',
+    maxAge: 1000 * 60 * 60 * 24 * 7,
+  });
+
+  res.json({ accessToken, user: publicUser(u) });
 });
 
 export default router;
