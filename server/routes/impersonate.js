@@ -36,7 +36,7 @@ router.get('/users', requireAuth, (req, res) => {
 
 // Super-admin only: set impersonation context
 // Returns a new access token for the impersonated user
-router.post('/start/:userId', requireAuth, (req, res) => {
+router.post('/start/:userId', requireAuth, async (req, res) => {
   if (req.user.role !== 'super_admin') {
     return res.status(403).json({ error: 'Only super admin can impersonate users' });
   }
@@ -73,7 +73,7 @@ router.post('/start/:userId', requireAuth, (req, res) => {
 });
 
 // Super-admin only: end impersonation, return to original user
-router.post('/stop', requireAuth, (req, res) => {
+router.post('/stop', requireAuth, async (req, res) => {
   if (req.user.role !== 'super_admin') {
     return res.status(403).json({ error: 'Only super admin can stop impersonation' });
   }
