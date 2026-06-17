@@ -136,13 +136,13 @@ CREATE INDEX IF NOT EXISTS idx_audit_actor ON audit_log(actor_id, created_at);
 CREATE INDEX IF NOT EXISTS idx_audit_entity ON audit_log(entity_type, entity_id);
 `;
 
-export function initSchema() {
+export async function initSchema() {
   // Run migrations to set up or upgrade the database schema
-  runMigrations();
+  await runMigrations();
 }
 
-export function seed() {
-  initSchema();
+export async function seed() {
+  await initSchema();
   const tenantCount = db.prepare('SELECT COUNT(*) AS n FROM tenants').get().n;
   if (tenantCount > 0) {
     console.log('Seed skipped — data already exists.');
@@ -217,6 +217,8 @@ export function seed() {
 
 // Allow `node server/db.js --seed`
 if (process.argv[1] && process.argv[1].endsWith('db.js') && process.argv.includes('--seed')) {
-  seed();
-  console.log(`DB ready at ${DB_PATH}`);
+  (async () => {
+    await seed();
+    console.log(`DB ready at ${DB_PATH}`);
+  })();
 }

@@ -25,12 +25,13 @@ function getCurrentVersion() {
 }
 
 // Run all pending migrations
-export function runMigrations() {
+export async function runMigrations() {
   const currentVersion = getCurrentVersion();
   console.log(`Current schema version: ${currentVersion}`);
 
-  // Read all migration files
-  const files = readdirSync(MIGRATIONS_DIR).filter(f => f.endsWith('.sql')).sort();
+  // Read all migration files (both .sql and .js)
+  const allFiles = readdirSync(MIGRATIONS_DIR).sort();
+  const files = allFiles.filter(f => f.endsWith('.sql') || f.endsWith('.js'));
 
   let appliedCount = 0;
   for (const file of files) {
@@ -46,16 +47,24 @@ export function runMigrations() {
     }
 
     try {
-      const sql = readFileSync(join(MIGRATIONS_DIR, file), 'utf-8');
       console.log(`Applying migration ${version} (${file})...`);
 
       // Wrap migration in transaction for atomicity
       db.exec('BEGIN TRANSACTION');
       try {
-        // Execute the migration file (split by ; to handle multiple statements)
-        const statements = sql.split(';').map(s => s.trim()).filter(s => s);
-        for (const stmt of statements) {
-          db.exec(stmt);
+        if (file.endsWith('.sql')) {
+          // SQL migration
+          const sql = readFileSync(join(MIGRATIONS_DIR, file), 'utf-8');
+          const statements = sql.split(';').map(s => s.trim()).filter(s => s);
+          for (const stmt of statements) {
+            db.exec(stmt);
+          }
+        } else if (file.endsWith('.js')) {
+          // JavaScript migration (can use Node.js for hashing, etc.)
+          const migrationModule = await import(`file://${join(MIGRATIONS_DIR, file)}`);
+          if (migrationModule.up) {
+            await migrationModule.up(db);
+          }
         }
 
         // Record the version

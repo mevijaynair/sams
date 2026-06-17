@@ -11,10 +11,6 @@ const __dirname = dirname(fileURLToPath(import.meta.url));
 const PUBLIC_DIR = join(__dirname, '..', 'public');
 const PORT = process.env.PORT || 3000;
 
-// Ensure tables exist, and seed demo data on a fresh DB.
-initSchema();
-seed();
-
 const app = express();
 app.use(express.json());
 
@@ -40,6 +36,16 @@ app.use((err, _req, res, _next) => {
   res.status(500).json({ error: 'Internal server error' });
 });
 
-app.listen(PORT, () => {
-  console.log(`SAMS running → http://localhost:${PORT}`);
-});
+// Initialize schema and seed data, then start the server
+(async () => {
+  try {
+    await initSchema();
+    await seed();
+    app.listen(PORT, () => {
+      console.log(`SAMS running → http://localhost:${PORT}`);
+    });
+  } catch (err) {
+    console.error('Failed to initialize database:', err);
+    process.exit(1);
+  }
+})();
