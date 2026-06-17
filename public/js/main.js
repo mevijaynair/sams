@@ -185,7 +185,19 @@ async function wireAuth() {
   function updateDevPanelVisibility() {
     const panel = document.querySelector('.dev-panel');
     if (panel) {
-      panel.style.display = DEV_MODE_VISIBLE && DEV_ACCOUNTS.length > 0 ? 'block' : 'none';
+      if (DEV_ACCOUNTS.length === 0) {
+        // No dev accounts available (production mode) - completely hide and disable
+        panel.style.display = 'none !important';
+        panel.style.visibility = 'hidden';
+        panel.style.pointerEvents = 'none';
+        panel.setAttribute('hidden', '');
+        panel.remove();  // Remove from DOM entirely in production
+      } else {
+        // Dev accounts available - show/hide based on toggle
+        panel.style.display = DEV_MODE_VISIBLE ? 'block' : 'none';
+        panel.style.visibility = DEV_MODE_VISIBLE ? 'visible' : 'hidden';
+        panel.style.pointerEvents = DEV_MODE_VISIBLE ? 'auto' : 'none';
+      }
     }
   }
 

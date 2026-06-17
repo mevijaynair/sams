@@ -78,11 +78,16 @@ router.get('/me', requireAuth, (req, res) => {
 });
 
 // Dev-only endpoint: fetch dev accounts (NEVER expose in production)
+// Only available when NODE_ENV !== 'production'
 router.get('/dev-accounts', (req, res) => {
-  if (process.env.NODE_ENV === 'production') {
+  const isDev = process.env.NODE_ENV !== 'production' && process.env.NODE_ENV !== 'prod';
+
+  if (!isDev) {
+    // Don't expose any hint that this endpoint exists
     return res.status(404).json({ error: 'Not found' });
   }
-  // Return only labels and emails (no passwords)
+
+  // Return only labels and emails (no passwords) — passwords never sent to client
   const accounts = [
     { email: 'super@sams.dev', label: 'Super Admin (all academies)' },
     { email: 'admin@apex.dev', label: 'Admin · Apex Football (single-sport)' },
@@ -96,7 +101,10 @@ router.get('/dev-accounts', (req, res) => {
 // Dev-only auto-login endpoint: logs in to a dev account without password
 // Only available in development mode; production returns 404
 router.post('/dev-login', (req, res) => {
-  if (process.env.NODE_ENV === 'production') {
+  const isDev = process.env.NODE_ENV !== 'production' && process.env.NODE_ENV !== 'prod';
+
+  if (!isDev) {
+    // Don't expose any hint that this endpoint exists
     return res.status(404).json({ error: 'Not found' });
   }
 
