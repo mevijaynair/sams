@@ -459,3 +459,14 @@ body, .sidebar, .topbar, .sams-card, .kpi, input, select, textarea, .btn, .att-r
   .modal-content { width: 95%; max-height: 90vh; }
   .form-row { gap: 0.9rem; }
 }
+
+/* ===== Super-admin impersonation UI ===== */
+.user-item { display: block; width: 100%; padding: 0.9rem 1rem; margin-bottom: 0.6rem;
+  background: var(--bg-main); border: 1px solid var(--border-color); border-radius: 10px;
+  text-align: left; cursor: pointer; transition: all 0.15s;
+  font-size: 0.9rem; color: var(--text-main); }
+.user-item:hover { background: var(--bg-subtle); border-color: var(--sport-ring); transform: translateX(2px); }
+.user-item:focus { outline: none; box-shadow: 0 0 0 3px var(--sport-ring); }
+.user-item strong { display: block; font-weight: 600; margin-bottom: 0.2rem; }
+
+#impersonateBtn { font-size: 1rem; padding: 0.4rem; }

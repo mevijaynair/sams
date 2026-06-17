@@ -12,6 +12,7 @@ import { initUsers, loadUsers } from './modules/users.js';
 import { initSettings, loadTenants } from './modules/settings.js';
 import { initParents } from './modules/parents.js';
 import { initAudit } from './modules/audit.js';
+import { initImpersonate } from './modules/impersonate.js';
 import { sportIcon, sportKey, allSportClasses, fieldPattern } from './graphics.js';
 import { initTheme } from './theme.js';
 
@@ -26,6 +27,7 @@ function initModulesOnce() {
   if (modulesReady) return;
   initAdmin(); initPitch(); initAttendance(); initRoster();
   initBilling(); initUsers(); initSettings(); initParents(); initAudit();
+  initImpersonate();  // Super admin user switching
   modulesReady = true;
 }
 

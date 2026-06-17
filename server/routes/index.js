@@ -2,6 +2,7 @@
 import { Router } from 'express';
 import auth from './auth.js';
 import passwordReset from './passwordReset.js';
+import impersonate from './impersonate.js';
 import students from './students.js';
 import evaluations from './evaluations.js';
 import attendance from './attendance.js';
@@ -22,6 +23,7 @@ router.use('/auth', passwordReset);  // forgot-password, reset-password, invite-
 
 // --- authenticated, but NOT tenant-resolved (the tenant chooser lives here) ---
 router.use(requireAuth);
+router.use('/impersonate', impersonate);  // super-admin user switching
 router.use('/tenants', tenants);                                  // own gating inside
 
 // --- everything below additionally needs a resolved tenant ---
