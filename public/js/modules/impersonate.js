@@ -1,7 +1,7 @@
 // modules/impersonate.js — Super-admin user impersonation for testing different roles
 import { api } from '../api.js';
 import { store } from '../store.js';
-import { esc } from '../api.js';
+import { esc } from '../util.js';
 
 let impersonating = null;
 
