@@ -12,7 +12,7 @@ router.get('/users', requireAuth, (req, res) => {
   }
 
   // Get all users, sorted by role, then name
-  const users = Users.all();
+  const users = Users.listAll();
   const sorted = users
     .filter(u => u.active)  // Only show active users
     .sort((a, b) => {

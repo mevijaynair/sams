@@ -33,11 +33,16 @@ function coerceSport(req) {
 }
 
 router.post('/', (req, res) => {
-  // Validate required fields
-  const errors = validate(req.body || {}, {
+  // name + age_group are required; fee fields are validated only when supplied
+  // (they default in the DB), matching the PUT route's behaviour.
+  const schema = {
     name: Validators.student.name,
     age_group: Validators.student.age_group,
-  });
+  };
+  if (req.body?.fee_plan_type !== undefined) schema.fee_plan_type = Validators.student.fee_plan_type;
+  if (req.body?.fee_rate !== undefined) schema.fee_rate = Validators.student.fee_rate;
+
+  const errors = validate(req.body || {}, schema);
   if (errors) {
     return res.status(400).json({ error: 'Validation failed', details: errors });
   }

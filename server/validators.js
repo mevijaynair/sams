@@ -3,7 +3,7 @@
 export const Validators = {
   // Student schema
   student: {
-    name: (v) => typeof v === 'string' && v.trim().length > 0 ? null : 'Name is required',
+    name: (v) => typeof v === 'string' && v.trim().length > 0 && v.length <= 200 ? null : 'Name is required (max 200 chars)',
     age_group: (v) => ['U6-U9', 'U10-U13', 'U14-U18'].includes(v) ? null : 'Invalid age group',
     sport: (v) => typeof v === 'string' && v.trim().length > 0 ? null : 'Sport is required',
     fee_plan_type: (v) => ['monthly', 'per_session', 'package'].includes(v) ? null : 'Invalid fee plan type',
@@ -42,14 +42,17 @@ export const Validators = {
   },
 };
 
-// Validate an object against a schema
+// Validate an object against a schema.
+// Every field in the schema is checked — including ones absent from `obj` —
+// so a missing required field is rejected (400) instead of slipping through to
+// the DB layer and crashing with a 500. Callers that want a field to be
+// optional simply omit it from the schema (see the PUT routes, which build the
+// schema only from the keys actually present in the request body).
 export function validate(obj, schema) {
   const errors = {};
   for (const [key, validator] of Object.entries(schema)) {
-    if (key in obj) {
-      const error = validator(obj[key]);
-      if (error) errors[key] = error;
-    }
+    const error = validator(obj[key]);
+    if (error) errors[key] = error;
   }
   return Object.keys(errors).length === 0 ? null : errors;
 }
