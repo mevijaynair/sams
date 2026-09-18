@@ -216,6 +216,10 @@ async function wireAuth() {
 
   window.addEventListener('sams:logout', showLogin);
 
+  // Rebuild the top tenant switcher when academies are created/changed, so a
+  // newly-created academy is immediately selectable without a full page reload.
+  window.addEventListener('sams:tenants-changed', () => { setupTenantSelector(); });
+
   $('tenantSelector').addEventListener('change', async (e) => {
     store.tenantId = e.target.value;
     applyTenant();                       // also broadcasts sams:tenant for module re-scope

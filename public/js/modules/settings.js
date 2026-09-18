@@ -21,6 +21,8 @@ export function initSettings() {
       toast('Academy created');
       $('tenantForm').reset();
       loadTenants();
+      // refresh the top tenant switcher so the new academy is selectable at once
+      window.dispatchEvent(new CustomEvent('sams:tenants-changed'));
     } catch (err) { toast(err.message, true); }
   });
 }

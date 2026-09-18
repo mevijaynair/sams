@@ -1,11 +1,19 @@
-// 003_seed_dev_accounts.js — Seed dev accounts and demo tenants/students
-// This migration runs on every environment (dev AND production) to ensure dev accounts exist.
-// The dev endpoints (/dev-accounts, /dev-login) are only exposed in development mode anyway.
+// 003_seed_dev_accounts.js — Seed dev accounts and demo tenants/students.
+// Runs ONLY outside production. Production must never contain known-password
+// accounts (super@sams.dev/super123) or demo academies: create real accounts
+// with scripts/create-superadmin.js and demo data with scripts/seed-demo-data.js.
 
 import { hashPassword } from '../auth.js';
 
 export async function up(db) {
   const now = new Date().toISOString();
+
+  // NEVER seed known-credential dev accounts / demo data into production.
+  const env = process.env.NODE_ENV;
+  if (env === 'production' || env === 'prod') {
+    console.log('Production environment — skipping dev-account/demo seed.');
+    return;
+  }
 
   // Check if already seeded (by looking for the super admin)
   const existing = db.prepare('SELECT COUNT(*) AS n FROM users WHERE email = ?').get('super@sams.dev');
