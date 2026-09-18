@@ -492,3 +492,54 @@ body, .sidebar, .topbar, .sams-card, .kpi, input, select, textarea, .btn, .att-r
 .user-item strong { display: block; font-weight: 600; margin-bottom: 0.2rem; }
 
 #impersonateBtn { font-size: 1rem; padding: 0.4rem; }
+
+/* ===== Fixtures / match-day (football) ===== */
+/* Dashboard match strip */
+.match-strip { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 0.9rem; }
+.match-card { position: relative; overflow: hidden; background: var(--bg-card);
+  border: 1px solid var(--border-color); border-radius: var(--radius); padding: 1.1rem 1.25rem;
+  box-shadow: var(--shadow-sm); }
+.match-card::before { content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: 4px; background: var(--sport-grad); }
+.match-card .mc-label { font-size: 0.66rem; text-transform: uppercase; letter-spacing: 0.08em;
+  color: var(--text-faint); font-weight: 700; margin-bottom: 0.4rem; }
+.match-card .mc-main { font-size: 1.15rem; font-weight: 800; letter-spacing: -0.01em; color: var(--text-main);
+  display: flex; align-items: center; gap: 0.5rem; }
+.match-card .mc-main.muted-main { color: var(--text-faint); font-weight: 600; font-size: 0.95rem; }
+.match-card .mc-sub { font-size: 0.76rem; color: var(--text-muted); margin-top: 0.25rem; }
+.rec-wdl { font-size: 0.7rem; color: var(--text-faint); font-weight: 700; margin: 0 0.35rem 0 0.1rem; }
+
+/* Fixture list rows */
+.fixture-list { display: flex; flex-direction: column; gap: 0.6rem; }
+.fixture-row { display: flex; align-items: center; gap: 1rem; padding: 0.85rem 1rem;
+  border: 1px solid var(--border-color); border-radius: 12px; background: var(--bg-inset); flex-wrap: wrap; }
+.fixture-row.result { background: var(--bg-card); }
+.fx-date { flex: none; min-width: 66px; display: flex; flex-direction: column; line-height: 1.2; }
+.fx-day { font-weight: 700; font-size: 0.85rem; }
+.fx-time { font-size: 0.72rem; color: var(--text-faint); }
+.fx-main { flex: 1; min-width: 140px; }
+.fx-opp { font-weight: 700; font-size: 0.95rem; display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap; }
+.fx-meta { font-size: 0.74rem; color: var(--text-muted); margin-top: 0.15rem; }
+.fx-score { display: flex; align-items: center; gap: 0.6rem; }
+.scoreline { font-weight: 800; font-size: 1.2rem; letter-spacing: 0.02em; font-variant-numeric: tabular-nums; }
+.fx-actions { display: flex; gap: 0.4rem; margin-left: auto; }
+
+/* Venue + result badges */
+.venue-badge { font-size: 0.62rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em;
+  padding: 0.12rem 0.5rem; border-radius: 9999px; border: 1px solid var(--border-strong); color: var(--text-muted); }
+.venue-badge.venue-home { color: var(--sport-on-soft); background: var(--sport-soft); border-color: var(--sport-ring); }
+.venue-badge.venue-away { color: var(--text-muted); }
+.result-pill { display: inline-grid; place-items: center; width: 26px; height: 26px; border-radius: 8px;
+  font-weight: 800; font-size: 0.82rem; color: #fff; flex: none; }
+.result-pill.result-W { background: var(--success); }
+.result-pill.result-D { background: var(--warning); }
+.result-pill.result-L { background: var(--danger); }
+
+/* Inline score entry */
+.score-entry { display: flex; align-items: center; gap: 0.4rem; margin-left: auto; flex-wrap: wrap; }
+.score-entry input { width: 58px; min-height: 40px; text-align: center; font-weight: 700; }
+.score-entry .se-dash { font-weight: 800; color: var(--text-faint); }
+
+@media (max-width: 768px) {
+  .match-strip { grid-template-columns: minmax(0, 1fr); }
+  .fx-actions, .score-entry { margin-left: 0; width: 100%; }
+}

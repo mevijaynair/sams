@@ -16,6 +16,7 @@ import * as Students from '../server/repos/students.js';
 import { Parents } from '../server/repos/parents.js';
 import * as Attendance from '../server/repos/attendance.js';
 import * as Evaluations from '../server/repos/evaluations.js';
+import * as Fixtures from '../server/repos/fixtures.js';
 import * as Tenants from '../server/repos/tenants.js';
 import { metricsFor } from '../public/js/config/sportMetrics.js';
 
@@ -32,6 +33,10 @@ const LAST = ['Nair','Al-Mansoori','Okafor','Sharma','Khan','Court','Haddad','Re
   'Patel','Hassan','Costa','Rahman','Mendez','Farah','Iqbal','Santos','Aziz','Malik'];
 const EXIT_REASONS = ['Relocated','Cost','Schedule clash','Switched academy','Lost interest'];
 const AGE_GROUPS = ['U6-U9','U10-U13','U14-U18'];
+const OPPONENTS = ['Al Wasl Youth','Shabab Al Ahli','Dubai City FC','Emirates Sports','Falcons Academy',
+  'Desert Star SC','Gulf United','Al Nasr Juniors','Sharjah Wanderers','Oasis FC','Marina Rangers'];
+const COMPETITIONS = ['League','League','Friendly','Cup','Tournament'];
+const VENUES = ['Home','Home','Away','Neutral'];
 
 function randomEID() {
   const yr = 2005 + rnd(18);
@@ -76,15 +81,15 @@ if (!tenant) {
   process.exit(1);
 }
 
+const sports = tenant.sports?.length ? tenant.sports : ['Football'];
 const existing = Students.list(tenantId);
-if (existing.length && !force) {
-  console.error(`Academy "${tenant.name}" already has ${existing.length} students. Re-run with FORCE=1 to add demo data anyway.`);
-  process.exit(1);
+const seedRoster = !existing.length || force;
+console.log(`Seeding "${tenant.name}" (${tenantId}) — sports: ${sports.join(', ')}`);
+if (!seedRoster) {
+  console.log(`  • ${existing.length} students already exist — skipping roster (use FORCE=1 to add more).`);
 }
 
-const sports = tenant.sports?.length ? tenant.sports : ['Football'];
-console.log(`Seeding "${tenant.name}" (${tenantId}) — sports: ${sports.join(', ')} — ${count} students...`);
-
+if (seedRoster) {
 // --- students ---
 const students = [];
 for (let i = 0; i < count; i++) {
@@ -163,5 +168,35 @@ for (const s of active) {
   }
 }
 console.log(`  ✓ ${evalCount} performance evaluations`);
+} // end roster seeding
+
+// --- fixtures & results (independent of roster; football match-day data) ---
+const existingFixtures = Fixtures.list(tenantId);
+if (!existingFixtures.length || force) {
+  const fxSport = sports.includes('Football') ? 'Football' : sports[0];
+  let past = 0, upcoming = 0;
+  for (let i = 0; i < 8; i++) {                     // played results, ~85–15 days ago
+    Fixtures.create(tenantId, {
+      opponent: pick(OPPONENTS), match_date: futureDate(-90 + i * 10, -85 + i * 10),
+      kickoff: pick(['16:00', '17:30', '18:00', '10:00']),
+      venue: pick(VENUES), competition: pick(COMPETITIONS),
+      age_group: pick(AGE_GROUPS), sport: fxSport,
+      status: 'Played', our_score: rnd(5), opp_score: rnd(4),
+    });
+    past++;
+  }
+  for (let i = 0; i < 4; i++) {                      // upcoming scheduled fixtures
+    Fixtures.create(tenantId, {
+      opponent: pick(OPPONENTS), match_date: futureDate(3 + i * 7, 6 + i * 7),
+      kickoff: pick(['16:00', '17:30', '18:00']),
+      venue: pick(VENUES), competition: pick(COMPETITIONS),
+      age_group: pick(AGE_GROUPS), sport: fxSport, status: 'Scheduled',
+    });
+    upcoming++;
+  }
+  console.log(`  ✓ ${past} results + ${upcoming} upcoming fixtures`);
+} else {
+  console.log(`  • ${existingFixtures.length} fixtures already exist — skipping.`);
+}
 
 console.log(`\nDone. Select "${tenant.name}" in the top academy switcher to see it populated.`);

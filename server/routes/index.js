@@ -6,6 +6,7 @@ import impersonate from './impersonate.js';
 import students from './students.js';
 import evaluations from './evaluations.js';
 import attendance from './attendance.js';
+import fixtures from './fixtures.js';
 import analytics from './analytics.js';
 import billing from './billing.js';
 import users from './users.js';
@@ -39,6 +40,7 @@ router.use('/students', gate('students:read', 'students:write'), students);
 router.use('/parents', gate('students:read', 'students:write'), parents);  // parents linked to students
 router.use('/evaluations', gate('performance:read', 'performance:write'), evaluations);
 router.use('/attendance', gate('attendance:read', 'attendance:write'), attendance);
+router.use('/fixtures', gate('fixtures:read', 'fixtures:write'), fixtures);
 router.use('/analytics', requirePerm('analytics:read'), analytics);
 router.use('/billing', requirePerm('billing:read'), billing);
 router.use('/export', requirePerm('students:read'), exportRoutes);

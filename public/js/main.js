@@ -12,6 +12,7 @@ import { initUsers, loadUsers } from './modules/users.js';
 import { initSettings, loadTenants } from './modules/settings.js';
 import { initParents } from './modules/parents.js';
 import { initAudit } from './modules/audit.js';
+import { initFixtures, loadFixtures } from './modules/fixtures.js';
 import { initImpersonate } from './modules/impersonate.js';
 import { sportIcon, sportKey, allSportClasses, fieldPattern } from './graphics.js';
 import { initTheme } from './theme.js';
@@ -27,6 +28,7 @@ function initModulesOnce() {
   if (modulesReady) return;
   initAdmin(); initPitch(); initAttendance(); initRoster();
   initBilling(); initUsers(); initSettings(); initParents(); initAudit();
+  initFixtures();     // match fixtures & results
   initImpersonate();  // Super admin user switching
   modulesReady = true;
 }
@@ -230,6 +232,7 @@ async function wireAuth() {
   // Per-view lazy loads for data not in the shared student cache.
   window.addEventListener('sams:view', (e) => {
     if (e.detail === 'dashboard') reloadAnalytics();
+    if (e.detail === 'fixtures') loadFixtures();
     if (e.detail === 'billing') loadBilling();
     if (e.detail === 'users') loadUsers();
     if (e.detail === 'settings') loadTenants();

@@ -1,5 +1,7 @@
 // dashboard.js — KPI strip + sport/plan/payment/churn bars + EID watchlist.
 import { esc } from '../util.js';
+import { api } from '../api.js';
+import { store } from '../store.js';
 
 const $ = (id) => document.getElementById(id);
 
@@ -37,6 +39,50 @@ export function renderDashboard(a) {
         s.expired ? '<span style="color:var(--danger);font-weight:600;">(EXPIRED)</span>'
                   : '<span style="color:var(--warning);">(expiring)</span>'}</div>`).join('')
     : 'All EIDs valid for 60+ days.';
+
+  loadMatchStrip();  // next fixture + last result (football)
+}
+
+// Dashboard match strip: next scheduled fixture, latest result, and season W-D-L.
+async function loadMatchStrip() {
+  const strip = $('matchStrip');
+  if (!strip || !store.can('fixtures:read')) return;
+  let fixtures;
+  try { fixtures = await api.fixtures(); } catch { strip.hidden = true; return; }
+
+  const today = new Date().toISOString().slice(0, 10);
+  const played = fixtures.filter(f => f.our_score != null && f.opp_score != null);
+  const next = fixtures
+    .filter(f => f.status === 'Scheduled' && f.match_date >= today)
+    .sort((a, b) => a.match_date.localeCompare(b.match_date))[0];
+  const last = played.sort((a, b) => b.match_date.localeCompare(a.match_date))[0];
+
+  const res = (f) => f.our_score > f.opp_score ? 'W' : f.our_score < f.opp_score ? 'L' : 'D';
+  const w = played.filter(f => res(f) === 'W').length;
+  const d = played.filter(f => res(f) === 'D').length;
+  const l = played.filter(f => res(f) === 'L').length;
+  const fmt = (dt) => { try { return new Date(dt + 'T00:00:00').toLocaleDateString(undefined, { day: 'numeric', month: 'short' }); } catch { return dt; } };
+
+  if (!next && !last) { strip.hidden = true; return; }
+  strip.hidden = false;
+  strip.innerHTML = `
+    <div class="match-card next">
+      <div class="mc-label">Next Fixture</div>
+      ${next ? `<div class="mc-main">vs ${esc(next.opponent)}</div>
+        <div class="mc-sub">${fmt(next.match_date)}${next.kickoff ? ' · ' + esc(next.kickoff) : ''} · ${esc(next.venue)}</div>`
+        : `<div class="mc-main muted-main">No fixture scheduled</div><div class="mc-sub">Add one in Fixtures</div>`}
+    </div>
+    <div class="match-card result">
+      <div class="mc-label">Last Result</div>
+      ${last ? `<div class="mc-main"><span class="result-pill result-${res(last)}">${res(last)}</span> ${last.our_score}–${last.opp_score}</div>
+        <div class="mc-sub">vs ${esc(last.opponent)} · ${fmt(last.match_date)}</div>`
+        : `<div class="mc-main muted-main">No results yet</div><div class="mc-sub">Log one in Fixtures</div>`}
+    </div>
+    <div class="match-card record">
+      <div class="mc-label">Season Record</div>
+      <div class="mc-main">${w}<span class="rec-wdl">W</span> ${d}<span class="rec-wdl">D</span> ${l}<span class="rec-wdl">L</span></div>
+      <div class="mc-sub">${played.length} match${played.length === 1 ? '' : 'es'} played</div>
+    </div>`;
 }
 
 const PLAN_LABELS = { monthly: 'Monthly', per_session: 'Per session', package: 'Package' };

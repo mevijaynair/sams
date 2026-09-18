@@ -8,6 +8,7 @@ export const PERMISSIONS = [
   'students:read', 'students:write',
   'attendance:read', 'attendance:write',
   'performance:read', 'performance:write',
+  'fixtures:read', 'fixtures:write',
   'billing:read', 'billing:write',
   'comms:read', 'comms:write',
   'analytics:read',
@@ -22,6 +23,7 @@ const ROLE_PERMS = {
     'students:read', 'students:write',
     'attendance:read', 'attendance:write',
     'performance:read', 'performance:write',
+    'fixtures:read', 'fixtures:write',
     'billing:read', 'billing:write',
     'comms:read', 'comms:write',
     'analytics:read',
@@ -32,6 +34,7 @@ const ROLE_PERMS = {
     'students:read',
     'attendance:read', 'attendance:write',
     'performance:read', 'performance:write',
+    'fixtures:read', 'fixtures:write',   // coaches run match days
     'analytics:read'
   ])
 };

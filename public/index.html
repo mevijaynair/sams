@@ -104,6 +104,7 @@
         <section class="view" data-view="dashboard">
           <div class="sport-hero" id="sportHero" hidden></div>
           <div class="kpi-strip" id="kpiStrip"></div>
+          <div id="matchStrip" class="match-strip" hidden></div>
           <div class="sams-card">
             <div class="card-header"><h3 class="card-title">Billing &amp; Churn Analytics</h3>
               <span class="card-sub">Active cohort</span></div>
@@ -248,6 +249,46 @@
             <div id="perfSummary"><p class="hint">Select a player to view their performance profile.</p></div>
             <div id="perfInputs"></div>
             <button class="btn full-w" id="perfSave" data-perm="performance:write">Save Evaluation Log</button>
+          </div>
+        </section>
+
+        <!-- FIXTURES & RESULTS -->
+        <section class="view" data-view="fixtures" hidden>
+          <!-- Add / schedule a fixture -->
+          <div class="sams-card" data-perm="fixtures:write">
+            <div class="card-header"><h3 class="card-title">Schedule a Fixture</h3>
+              <span class="card-sub">Add an upcoming match</span></div>
+            <form id="fixtureForm">
+              <div class="form-row">
+                <div class="form-group full"><label>Opponent *</label>
+                  <input id="fx_opponent" placeholder="e.g. Al Wasl Youth" required></div>
+                <div class="form-group"><label>Match Date *</label>
+                  <input id="fx_date" type="date" required></div>
+                <div class="form-group"><label>Kick-off</label>
+                  <input id="fx_kickoff" type="time"></div>
+                <div class="form-group"><label>Venue</label>
+                  <select id="fx_venue"><option>Home</option><option>Away</option><option>Neutral</option></select></div>
+                <div class="form-group"><label>Competition</label>
+                  <select id="fx_competition"><option>Friendly</option><option>League</option><option>Cup</option><option>Tournament</option></select></div>
+                <div class="form-group"><label>Age Group</label>
+                  <select id="fx_age"><option value="">Any</option><option>U6-U9</option><option>U10-U13</option><option>U14-U18</option></select></div>
+              </div>
+              <button class="btn mt" type="submit">Add Fixture</button>
+            </form>
+          </div>
+
+          <!-- Upcoming fixtures -->
+          <div class="sams-card">
+            <div class="card-header"><h3 class="card-title">Upcoming Fixtures</h3>
+              <span class="card-sub" id="fxUpcomingCount"></span></div>
+            <div id="fxUpcoming" class="fixture-list"></div>
+          </div>
+
+          <!-- Results -->
+          <div class="sams-card">
+            <div class="card-header"><h3 class="card-title">Recent Results</h3>
+              <span class="card-sub" id="fxRecord"></span></div>
+            <div id="fxResults" class="fixture-list"></div>
           </div>
         </section>
 

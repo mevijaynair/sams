@@ -20,6 +20,16 @@ export const Validators = {
     phone: (v) => v === null || v === undefined || (typeof v === 'string' && v.trim().length > 0) ? null : 'Invalid phone number',
   },
 
+  // Fixture / match schema
+  fixture: {
+    opponent: (v) => typeof v === 'string' && v.trim().length > 0 && v.length <= 120 ? null : 'Opponent is required (max 120 chars)',
+    match_date: (v) => typeof v === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(v) ? null : 'Invalid match date (YYYY-MM-DD)',
+    venue: (v) => ['Home', 'Away', 'Neutral'].includes(v) ? null : 'Venue must be Home, Away or Neutral',
+    status: (v) => ['Scheduled', 'Played', 'Cancelled'].includes(v) ? null : 'Invalid status',
+    our_score: (v) => v === null || v === undefined || (Number.isInteger(v) && v >= 0 && v <= 99) ? null : 'Score must be 0–99',
+    opp_score: (v) => v === null || v === undefined || (Number.isInteger(v) && v >= 0 && v <= 99) ? null : 'Score must be 0–99',
+  },
+
   // Attendance schema
   attendance: {
     student_id: (v) => typeof v === 'string' && v.length > 0 ? null : 'Student ID is required',

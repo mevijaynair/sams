@@ -117,6 +117,11 @@ export const api = {
   saveAttendance: (date, entries) => req('POST', `/attendance/${date}`, { entries }),
   attendanceSummary: (sid) => req('GET', `/attendance/summary/${sid}`),
 
+  fixtures: () => req('GET', '/fixtures'),
+  createFixture: (f) => req('POST', '/fixtures', f),
+  updateFixture: (id, f) => req('PUT', `/fixtures/${id}`, f),
+  deleteFixture: (id) => req('DELETE', `/fixtures/${id}`),
+
   analytics: () => req('GET', '/analytics/summary'),
   billing: () => req('GET', '/billing'),
 
